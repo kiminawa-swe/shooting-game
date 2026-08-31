@@ -1,6 +1,7 @@
 #include "game.h"
 #include <cmath>
 #include < cstdlib >
+#include<algorithm>//to use remove_if
 #include <iostream>
 //constructor
 
@@ -131,12 +132,26 @@ void Game::update(float deltaTime) {
                 break; // no more searching using the same bullet to others zombies
 
 
+
             }
 
 
 
         }
     }
+
+    //clean-up of bullets throw away (not hitting target and fly out of nowhere)
+    //using lambda , as declaring others function inside a function is prohibited
+    auto isOffScreen = [](const Bullet& b) {
+
+
+        sf::Vector2f pos = b.bulletShape.getPosition();
+
+        return pos.x < 0 || pos.x>800 || pos.y < 0 || pos.y>600;
+
+        };
+
+    bullets.erase(std::remove_if(bullets.begin(), bullets.end(), isOffScreen), bullets.end());
 
     
 
