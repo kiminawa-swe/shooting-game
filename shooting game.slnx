@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="shooting game/shooting game.vcxproj" Id="d0626225-2005-495b-9029-a59340cc40c6" />
+</Solution>
