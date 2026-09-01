@@ -24,6 +24,7 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(player
 
     playerSpeed = 250.f;
     bulletSpeed = 500.f;
+    playerHealth = 100.f;//initiliaze player health
 
 }
 
@@ -124,7 +125,7 @@ void Game::update(float deltaTime) {
             //if the distance < collision range, it mean collision occur
 
             if (distance < collisionRange) {
-                bullets.erase(bullets.begin()+i);  //vec.begin() +i 
+                bullets.erase(bullets.begin()+i);  //syntax: vec.begin() +i 
                 zombies.erase(zombies.begin()+j);
 
                 i--; //as the item in the vector will slide to left ,we move backward 
@@ -152,6 +153,41 @@ void Game::update(float deltaTime) {
         };
 
     bullets.erase(std::remove_if(bullets.begin(), bullets.end(), isOffScreen), bullets.end());
+
+    //player damage
+
+    for (auto& d : zombies) {
+        sf::Vector2f zombiePos = d.zombShape.getPosition();
+        sf::Vector2f playerPos = playerSprite.getPosition();
+
+        sf::Vector2f direction = playerPos - zombiePos;//?
+        float dx = playerPos.x - zombiePos.x;
+        float dy = playerPos.y - zombiePos.y;
+
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        float collisionRange = d.zombShape.getRadius() + 20.f; 
+
+        if (distance < collisionRange) {
+            //collision with player occur , and damage given 1 at a time
+            if (DamageClock.getElapsedTime().asSeconds() > 1.f) {
+                playerHealth -= 10;
+                DamageClock.restart();
+
+                std::cout << "current player health-> " << playerHealth <<"\n";
+
+                
+
+
+            }
+
+        }
+        if (playerHealth < 0.f) {
+                    std::cout << "game over" << "\n";
+                    break;
+                }
+
+    }
 
     
 
