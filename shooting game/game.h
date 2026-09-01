@@ -30,6 +30,10 @@ private:
 	std::vector<Zombie>zombies;
 	sf::Clock spawnClock; // use to give time for zombie to spawn
 
+	//deal with player damage
+	float playerHealth;
+	sf::Clock DamageClock;// use to give a damage at a time
+
 
 	//process->update->render
 	
