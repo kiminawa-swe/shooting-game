@@ -34,6 +34,11 @@ private:
 	float playerHealth;
 	sf::Clock DamageClock;// use to give a damage at a time
 
+	//Font
+	sf::Font gameFont;
+	sf::Text gameText;
+	bool isGameOver;
+
 
 	//process->update->render
 	
