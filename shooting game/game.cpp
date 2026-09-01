@@ -5,12 +5,16 @@
 #include <iostream>
 //constructor
 
-Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(playerTexture){
+Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(playerTexture),gameText(gameFont){
 
     if (!playerTexture.loadFromFile("Hunting_Rifle_12x.png")) {
         std::cout << "failed to load the image";
     }
 
+    if (!gameFont.openFromFile("freedom-font/Freedom-10eM.ttf")) {
+        std::cout << "failed to load ";
+    }
+    
    
     playerSprite.setTexture(playerTexture, true); //initially in constructor we use playerSprite(playerTexture),playerTexture is in 0x0, so then we need to refresh after loaded true texture
 
@@ -26,6 +30,15 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(player
     bulletSpeed = 500.f;
     playerHealth = 100.f;//initiliaze player health
 
+    //Font and text
+
+    
+    gameText.setCharacterSize(50);
+    gameText.setString("GAME OVER");
+    gameText.setFillColor(sf::Color::Red);
+    gameText.setPosition({ 300.f,250.f });
+    isGameOver = false;
+    //
 }
 
 //process->update->render 
@@ -63,6 +76,8 @@ void Game::processEvent() {
 }
 
 void Game::update(float deltaTime) {
+    //base case
+    if (isGameOver) { return; }
 
     handleMovement(deltaTime);
     handleAiming();
@@ -176,18 +191,20 @@ void Game::update(float deltaTime) {
 
                 std::cout << "current player health-> " << playerHealth <<"\n";
 
+                if (playerHealth <= 0) {
+                    isGameOver = true;
+                }
                 
 
 
             }
 
         }
-        if (playerHealth < 0.f) {
-                    std::cout << "game over" << "\n";
-                    break;
-                }
+       
 
     }
+
+
 
     
 
@@ -195,6 +212,7 @@ void Game::update(float deltaTime) {
 
 void Game::render() {
 
+    if (!isGameOver) {
     window.clear();
     
     
@@ -208,6 +226,12 @@ void Game::render() {
 
     
     window.draw(playerSprite);
+
+    }
+    else {
+        window.draw(gameText);
+    }
+    
     window.display();
 
 
