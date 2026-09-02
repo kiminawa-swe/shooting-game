@@ -31,7 +31,7 @@ private:
 	sf::Clock spawnClock; // use to give time for zombie to spawn
 
 	//deal with player damage
-	float playerHealth;
+	int playerHealth;
 	sf::Clock DamageClock;// use to give a damage at a time
 
 	//Font
@@ -39,6 +39,12 @@ private:
 	sf::Text gameText;
 	bool isGameOver;
 
+	//score
+	int score;
+	sf::Text scoreText;
+
+	//health display
+	sf::Text healthText;
 
 	//process->update->render
 	

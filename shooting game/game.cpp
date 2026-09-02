@@ -5,13 +5,13 @@
 #include <iostream>
 //constructor
 
-Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(playerTexture),gameText(gameFont){
+Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(playerTexture),gameText(gameFont),scoreText(gameFont),healthText(gameFont){
 
     if (!playerTexture.loadFromFile("Hunting_Rifle_12x.png")) {
         std::cout << "failed to load the image";
     }
 
-    if (!gameFont.openFromFile("freedom-font/Freedom-10eM.ttf")) {
+    if (!gameFont.openFromFile("orange juice 2.0.ttf")) {
         std::cout << "failed to load ";
     }
     
@@ -28,7 +28,7 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(player
 
     playerSpeed = 250.f;
     bulletSpeed = 500.f;
-    playerHealth = 100.f;//initiliaze player health
+    playerHealth = 100;//initiliaze player health
 
     //Font and text
 
@@ -39,6 +39,21 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(player
     gameText.setPosition({ 300.f,250.f });
     isGameOver = false;
     //
+
+    //score text
+    score = 0;
+    scoreText.setCharacterSize(20);
+    scoreText.setString("Score: 0");
+    scoreText.setFillColor(sf::Color::Yellow);
+    scoreText.setPosition({ 400.f,0.f });
+    
+    //health text
+    healthText.setCharacterSize(20);
+    healthText.setString("Health: 100");
+    healthText.setFillColor(sf::Color::Red);
+    healthText.setPosition({ 0.f,0.f });
+
+
 }
 
 //process->update->render 
@@ -143,6 +158,9 @@ void Game::update(float deltaTime) {
                 bullets.erase(bullets.begin()+i);  //syntax: vec.begin() +i 
                 zombies.erase(zombies.begin()+j);
 
+                score += 10;
+                scoreText.setString("Score: "+std::to_string(score))  ;
+
                 i--; //as the item in the vector will slide to left ,we move backward 
 
                 break; // no more searching using the same bullet to others zombies
@@ -188,8 +206,8 @@ void Game::update(float deltaTime) {
             if (DamageClock.getElapsedTime().asSeconds() > 1.f) {
                 playerHealth -= 10;
                 DamageClock.restart();
-
-                std::cout << "current player health-> " << playerHealth <<"\n";
+                
+                healthText.setString("Health: " + std::to_string(playerHealth));
 
                 if (playerHealth <= 0) {
                     isGameOver = true;
@@ -216,16 +234,18 @@ void Game::render() {
     window.clear();
     
     
-    for (auto& b : bullets) {
-        window.draw(b.bulletShape);
-    }
+        for (auto& b : bullets) {
+            window.draw(b.bulletShape);
+        }
 
-    for (auto& z : zombies) {
-        window.draw(z.zombShape);
-    }
+        for (auto& z : zombies) {
+            window.draw(z.zombShape);
+        }
 
     
-    window.draw(playerSprite);
+        window.draw(playerSprite);
+        window.draw(scoreText);
+        window.draw(healthText);
 
     }
     else {
