@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <vector>
 
 struct Zombie {
@@ -46,6 +47,10 @@ private:
 	//health display
 	sf::Text healthText;
 
+	//Audio Soundbuffer->Sound sound
+	sf::SoundBuffer buffer;
+	sf::Sound gunSound;
+
 	//process->update->render
 	
 	void processEvent();
@@ -57,6 +62,11 @@ private:
 	void shoot();
 
 	void spawnZombie();
+	void reset();//reset game 
+
+	
+
+	
 
 public:
 	Game(); //constructor

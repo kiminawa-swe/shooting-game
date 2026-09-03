@@ -4,15 +4,18 @@
 #include<algorithm>//to use remove_if
 #include <iostream>
 //constructor
-
-Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(playerTexture),gameText(gameFont),scoreText(gameFont),healthText(gameFont){
+Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(playerTexture),gameText(gameFont),scoreText(gameFont),healthText(gameFont),gunSound(buffer){
 
     if (!playerTexture.loadFromFile("Hunting_Rifle_12x.png")) {
         std::cout << "failed to load the image";
     }
 
     if (!gameFont.openFromFile("orange juice 2.0.ttf")) {
-        std::cout << "failed to load ";
+        std::cout << "failed to load font";
+    }
+
+    if (!buffer.loadFromFile("freesound_community-rifle-gunshot-99749.wav")) {
+        std::cout << "failed to load sound ";
     }
     
    
@@ -53,6 +56,9 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(player
     healthText.setFillColor(sf::Color::Red);
     healthText.setPosition({ 0.f,0.f });
 
+    //sound
+    gunSound.setDopplerFactor(25.f);
+
 
 }
 
@@ -82,8 +88,15 @@ void Game::processEvent() {
         if (event->is<sf::Event::MouseButtonPressed>()) {
             //handle shooting 
             shoot();
+            gunSound.play();
+            
 
 
+
+        }
+
+        if (isGameOver && event->is < sf::Event::KeyPressed>()) {
+            reset();
         }
     }
 
@@ -355,3 +368,22 @@ void Game::spawnZombie() {
 
     zombies.push_back(z);
 }
+
+void Game::reset() {
+    //reset the value
+    playerHealth = 100;
+    score = 0;
+
+    healthText.setString("Health: 100");
+    scoreText.setString("score: 0");
+
+    zombies.clear();
+    bullets.clear();
+
+
+    playerSprite.setPosition({ 400.f,300.f });
+    isGameOver = false;
+
+
+}
+
