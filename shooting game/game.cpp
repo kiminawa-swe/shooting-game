@@ -17,6 +17,11 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(player
         std::cout << "failed to load the image";
     }
 
+    if (!bulletTexture.loadFromFile("Bullet.png")) {
+        std::cout << "failed to load the image";
+    }
+
+
 
     if (!gameFont.openFromFile("orange juice 2.0.ttf")) {
         std::cout << "failed to load font";
@@ -125,7 +130,7 @@ void Game::update(float deltaTime) {
     handleAiming();
 
     for (auto& b : bullets) {
-        b.bulletShape.move(b.velocity*deltaTime); //updated: times with deltaTime
+        b.bulletSprite.move(b.velocity*deltaTime); //updated: times with deltaTime
 
     }
 
@@ -166,7 +171,7 @@ void Game::update(float deltaTime) {
         for (int j = 0;j < zombies.size();j++) {
             //get the position first
 
-            sf::Vector2f bulletPos = bullets[i].bulletShape.getPosition();
+            sf::Vector2f bulletPos = bullets[i].bulletSprite.getPosition();
             sf::Vector2f zombiePos = zombies[j].zombieSprite.getPosition();
 
             //to calculate distance
@@ -177,7 +182,7 @@ void Game::update(float deltaTime) {
             float distance = sqrt(dx * dx + dy * dy);
 
             //find the sum of radius of zombie and bullet 
-            float collisionRange = bullets[i].bulletShape.getRadius() + 15.f;
+            float collisionRange = 15.f + 15.f;
 
             //if the distance < collision range, it mean collision occur
 
@@ -206,7 +211,7 @@ void Game::update(float deltaTime) {
     auto isOffScreen = [](const Bullet& b) {
 
 
-        sf::Vector2f pos = b.bulletShape.getPosition();
+        sf::Vector2f pos = b.bulletSprite.getPosition();
 
         return pos.x < 0 || pos.x>800 || pos.y < 0 || pos.y>600;
 
@@ -262,7 +267,7 @@ void Game::render() {
     
     
         for (auto& b : bullets) {
-            window.draw(b.bulletShape);
+            window.draw(b.bulletSprite);
         }
 
         for (auto& z : zombies) {
@@ -315,15 +320,18 @@ void Game::handleAiming() {
 
     //set angle to sprite
     playerSprite.setRotation(sf::degrees(angle));
+    
 }
 
 void Game::shoot() {
 
-    Bullet b;
-
-    b.bulletShape.setFillColor(sf::Color::Yellow);
+    Bullet b(bulletTexture);
+    b.bulletSprite.setScale({ 0.5f,0.5f });
+    /*b.bulletShape.setFillColor(sf::Color::Yellow);
     b.bulletShape.setRadius(4.f);
-    b.bulletShape.setPosition(playerSprite.getPosition());
+    b.bulletShape.setPosition(playerSprite.getPosition());*/
+
+    b.bulletSprite.setPosition(playerSprite.getPosition());
 
     sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
     sf::Vector2f mousePos = window.mapPixelToCoords(mousePixel);
@@ -335,6 +343,12 @@ void Game::shoot() {
         direction /= length; //direction divide length to get exact value 
         //direction is the" target coordinate "
     }
+
+    //handle the bullet rotation
+    float angle = std::atan2(direction.y, direction.x) * 180.f / 3.14159f;
+
+    //set angle to sprite
+    b.bulletSprite.setRotation(sf::degrees(angle+90.f));
 
 
     b.velocity = bulletSpeed * direction; //doesnt require delta time? line 65,
