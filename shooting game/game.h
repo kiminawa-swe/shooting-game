@@ -4,8 +4,11 @@
 #include <vector>
 
 struct Zombie {
-	sf::CircleShape zombShape;
+	
+	sf::Sprite zombieSprite;
 	float speed;
+	//this way ,we can reuse same texture
+	Zombie(sf::Texture &tex):zombieSprite(tex){} //only need the reference of the texture
 };
 
 struct Bullet {
@@ -20,10 +23,13 @@ private:
 	sf::RenderWindow window;
 	sf::Clock clock;
 
+	//texture
 	sf::Texture playerTexture;
 	sf::Sprite playerSprite;
-	//sf::Texture playerTexture;
 	float playerSpeed;
+
+	sf::Texture zombTexture;
+	
 
 	std::vector<Bullet> bullets;
 	float bulletSpeed;
@@ -50,6 +56,7 @@ private:
 	//Audio Soundbuffer->Sound sound
 	sf::SoundBuffer buffer;
 	sf::Sound gunSound;
+
 
 	//process->update->render
 	

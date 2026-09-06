@@ -3,12 +3,20 @@
 #include < cstdlib >
 #include<algorithm>//to use remove_if
 #include <iostream>
+
 //constructor
 Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(playerTexture),gameText(gameFont),scoreText(gameFont),healthText(gameFont),gunSound(buffer){
+
+    
 
     if (!playerTexture.loadFromFile("Hunting_Rifle_12x.png")) {
         std::cout << "failed to load the image";
     }
+
+    if (!zombTexture.loadFromFile("Hazmat_Suit.png")) {
+        std::cout << "failed to load the image";
+    }
+
 
     if (!gameFont.openFromFile("orange juice 2.0.ttf")) {
         std::cout << "failed to load font";
@@ -19,10 +27,11 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(player
     }
     
    
-    playerSprite.setTexture(playerTexture, true); //initially in constructor we use playerSprite(playerTexture),playerTexture is in 0x0, so then we need to refresh after loaded true texture
+    
 
     srand(static_cast<unsigned>(time(0))); // to make random number spread more evenly
 
+    playerSprite.setTexture(playerTexture, true); //initially in constructor we use playerSprite(playerTexture),playerTexture is in 0x0, so then we need to refresh after loaded true texture
     playerSprite.setPosition({ 400.f, 300.f });
     playerSprite.setScale({ 0.25f, 0.25f });
 
@@ -61,6 +70,11 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(player
 
 
 }
+
+
+
+
+
 
 //process->update->render 
 void Game::run() {
@@ -127,7 +141,7 @@ void Game::update(float deltaTime) {
 
     for (auto& z : zombies) {
         //zombies movement here
-        sf::Vector2f zombPos = z.zombShape.getPosition();
+        sf::Vector2f zombPos = z.zombieSprite.getPosition();
         sf::Vector2f playerPos = playerSprite.getPosition();
 
         sf::Vector2f direction = playerPos - zombPos;
@@ -142,7 +156,7 @@ void Game::update(float deltaTime) {
 
         
 
-        z.zombShape.move(z.speed * direction*deltaTime);
+        z.zombieSprite.move(z.speed * direction*deltaTime);
 
     }
 
@@ -153,7 +167,7 @@ void Game::update(float deltaTime) {
             //get the position first
 
             sf::Vector2f bulletPos = bullets[i].bulletShape.getPosition();
-            sf::Vector2f zombiePos = zombies[j].zombShape.getPosition();
+            sf::Vector2f zombiePos = zombies[j].zombieSprite.getPosition();
 
             //to calculate distance
 
@@ -163,7 +177,7 @@ void Game::update(float deltaTime) {
             float distance = sqrt(dx * dx + dy * dy);
 
             //find the sum of radius of zombie and bullet 
-            float collisionRange = bullets[i].bulletShape.getRadius() + zombies[j].zombShape.getRadius();
+            float collisionRange = bullets[i].bulletShape.getRadius() + 15.f;
 
             //if the distance < collision range, it mean collision occur
 
@@ -203,7 +217,7 @@ void Game::update(float deltaTime) {
     //player damage
 
     for (auto& d : zombies) {
-        sf::Vector2f zombiePos = d.zombShape.getPosition();
+        sf::Vector2f zombiePos = d.zombieSprite.getPosition();
         sf::Vector2f playerPos = playerSprite.getPosition();
 
         sf::Vector2f direction = playerPos - zombiePos;//?
@@ -212,7 +226,7 @@ void Game::update(float deltaTime) {
 
         float distance = std::sqrt(dx * dx + dy * dy);
 
-        float collisionRange = d.zombShape.getRadius() + 20.f; 
+        float collisionRange = 20.f + 20.f;
 
         if (distance < collisionRange) {
             //collision with player occur , and damage given 1 at a time
@@ -252,7 +266,7 @@ void Game::render() {
         }
 
         for (auto& z : zombies) {
-            window.draw(z.zombShape);
+            window.draw(z.zombieSprite);
         }
 
     
@@ -333,10 +347,9 @@ void Game::shoot() {
 
 
 void Game::spawnZombie() {
-    Zombie z;
+    Zombie z(zombTexture);
 
-    z.zombShape.setRadius(10.f);
-    z.zombShape.setFillColor(sf::Color::Green);
+    //z.zombieSprite.setScale({ 0.5f,0.5f });
     z.speed = 10.f;
 
     //creating random position of zombies
@@ -364,7 +377,7 @@ void Game::spawnZombie() {
 
 
 
-    z.zombShape.setPosition(pos);
+    z.zombieSprite.setPosition(pos);
 
     zombies.push_back(z);
 }
