@@ -1,10 +1,14 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <vector>
 
 struct Zombie {
-	sf::CircleShape zombShape;
+	
+	sf::Sprite zombieSprite;
 	float speed;
+	//this way ,we can reuse same texture
+	Zombie(sf::Texture &tex):zombieSprite(tex){} //only need the reference of the texture
 };
 
 struct Bullet {
@@ -19,10 +23,13 @@ private:
 	sf::RenderWindow window;
 	sf::Clock clock;
 
+	//texture
 	sf::Texture playerTexture;
 	sf::Sprite playerSprite;
-	//sf::Texture playerTexture;
 	float playerSpeed;
+
+	sf::Texture zombTexture;
+	
 
 	std::vector<Bullet> bullets;
 	float bulletSpeed;
@@ -46,6 +53,11 @@ private:
 	//health display
 	sf::Text healthText;
 
+	//Audio Soundbuffer->Sound sound
+	sf::SoundBuffer buffer;
+	sf::Sound gunSound;
+
+
 	//process->update->render
 	
 	void processEvent();
@@ -57,6 +69,11 @@ private:
 	void shoot();
 
 	void spawnZombie();
+	void reset();//reset game 
+
+	
+
+	
 
 public:
 	Game(); //constructor
