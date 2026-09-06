@@ -8,13 +8,17 @@ struct Zombie {
 	sf::Sprite zombieSprite;
 	float speed;
 	//this way ,we can reuse same texture
-	Zombie(sf::Texture &tex):zombieSprite(tex){} //only need the reference of the texture
+	Zombie(sf::Texture& tex):zombieSprite(tex){} //only need the reference of the texture
 };
 
 struct Bullet {
-	sf::CircleShape bulletShape;
+	//sf::CircleShape bulletShape;
+	sf::Sprite bulletSprite;
 	sf::Vector2f velocity;
+
+	Bullet(sf::Texture& tex) :bulletSprite(tex) {}
 };
+
 
 
 class Game{
@@ -29,6 +33,8 @@ private:
 	float playerSpeed;
 
 	sf::Texture zombTexture;
+
+	sf::Texture bulletTexture;
 	
 
 	std::vector<Bullet> bullets;
