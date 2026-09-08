@@ -35,7 +35,9 @@ private:
 	sf::Texture zombTexture;
 
 	sf::Texture bulletTexture;
-	
+
+	sf::Texture gunTexture;
+	sf::Sprite gunSprite;
 
 	std::vector<Bullet> bullets;
 	float bulletSpeed;
@@ -46,6 +48,11 @@ private:
 	//deal with player damage
 	int playerHealth;
 	sf::Clock DamageClock;// use to give a damage at a time
+
+	//gameClock(difficulty scaling)
+	sf::Clock gameClock;
+	float spawnInterval;
+
 
 	//Font
 	sf::Font gameFont;
@@ -62,6 +69,12 @@ private:
 	//Audio Soundbuffer->Sound sound
 	sf::SoundBuffer buffer;
 	sf::Sound gunSound;
+
+	//sprite-sheet
+
+	int currentRow;
+	int currentFrame;//colum
+	sf::Clock animClock;
 
 
 	//process->update->render
