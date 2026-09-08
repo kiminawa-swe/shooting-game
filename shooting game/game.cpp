@@ -5,11 +5,13 @@
 #include <iostream>
 
 //constructor
-Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(playerTexture),gameText(gameFont),scoreText(gameFont),healthText(gameFont),gunSound(buffer){
+Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTexture),playerSprite(playerTexture),gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer) {
 
-    
+    if (!gunTexture.loadFromFile("SMG.png")) {
+        std::cout << "failed to load the image";
+    }
 
-    if (!playerTexture.loadFromFile("Hunting_Rifle_12x.png")) {
+    if (!playerTexture.loadFromFile("character-spritesheet.png")) {
         std::cout << "failed to load the image";
     }
 
@@ -36,16 +38,31 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(player
 
     srand(static_cast<unsigned>(time(0))); // to make random number spread more evenly
 
+    //PLAYER
     playerSprite.setTexture(playerTexture, true); //initially in constructor we use playerSprite(playerTexture),playerTexture is in 0x0, so then we need to refresh after loaded true texture
     playerSprite.setPosition({ 400.f, 300.f });
-    playerSprite.setScale({ 0.25f, 0.25f });
-
-    sf::FloatRect bound = playerSprite.getLocalBounds();
-    playerSprite.setOrigin({ 400.f, (bound.size.y / 2)-80.f});
+    playerSprite.setScale({ 1.f, 1.f });
+    //GUN
+    gunSprite.setTexture(gunTexture, true);
+    gunSprite.setPosition(playerSprite.getPosition());
+    //gunSprite.setScale({ 0.25f,0.25f });
+    gunSprite.setOrigin({ 21.f,10.f });
+    
+    /*sf::FloatRect bound = playerSprite.getLocalBounds();
+    playerSprite.setOrigin({ 400.f, (bound.size.y / 2)-80.f});*/
 
     playerSpeed = 250.f;
     bulletSpeed = 500.f;
     playerHealth = 100;//initiliaze player health
+    spawnInterval = 2.0f;
+
+    //player-sprite-sheet
+    currentRow = 11; //player facing down
+    currentFrame = 0;//col 0
+    playerSprite.setTextureRect(sf::IntRect({ currentFrame * 64, currentRow * 64 }, { 64, 64 }));
+    playerSprite.setOrigin({ 32.f,32.f });//center of 64x64 frame
+
+    gunSprite.setPosition(playerSprite.getPosition());
 
     //Font and text
 
@@ -72,6 +89,8 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),playerSprite(player
 
     //sound
     gunSound.setDopplerFactor(25.f);
+
+    
 
 
 }
@@ -104,7 +123,7 @@ void Game::processEvent() {
         if (event->is<sf::Event::Closed>())
             window.close();
 
-        if (event->is<sf::Event::MouseButtonPressed>()) {
+        if (!isGameOver &&event->is<sf::Event::MouseButtonPressed>()) {
             //handle shooting 
             shoot();
             gunSound.play();
@@ -135,8 +154,12 @@ void Game::update(float deltaTime) {
     }
 
     //zombie will be spawn after 2 seconds, use: sf::Clock
-
-    if (spawnClock.getElapsedTime().asSeconds() > 2.f) {
+    float gameTime = gameClock.getElapsedTime().asSeconds();
+    float progress = gameTime / 60.f;
+    if (progress > 1.f) progress = 1.f; //the highest progress capt
+    spawnInterval = 2.f-(progress * (2.0f - 0.5f));
+    
+    if (spawnClock.getElapsedTime().asSeconds() > spawnInterval) {
         spawnZombie();
         
         spawnClock.restart();
@@ -182,7 +205,7 @@ void Game::update(float deltaTime) {
             float distance = sqrt(dx * dx + dy * dy);
 
             //find the sum of radius of zombie and bullet 
-            float collisionRange = 15.f + 15.f;
+            float collisionRange = 10.f + 15.f;
 
             //if the distance < collision range, it mean collision occur
 
@@ -274,7 +297,7 @@ void Game::render() {
             window.draw(z.zombieSprite);
         }
 
-    
+        window.draw(gunSprite);
         window.draw(playerSprite);
         window.draw(scoreText);
         window.draw(healthText);
@@ -294,21 +317,50 @@ void Game::render() {
 //handling function
 
 void Game::handleMovement(float deltaTime) {
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
+    bool isMoving=false;
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
         playerSprite.move({ 0.f,-playerSpeed * deltaTime });
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
+        gunSprite.move({ 0.f,-playerSpeed * deltaTime });
+        isMoving = true;
+        currentRow = 8;//up
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
         playerSprite.move({ 0.f,playerSpeed * deltaTime });
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+        gunSprite.move({ 0.f,playerSpeed * deltaTime });
+        isMoving = true;
+        currentRow = 10;//down
+
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
         playerSprite.move({ playerSpeed * deltaTime,0.f });
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+        gunSprite.move({ playerSpeed * deltaTime,0.f });
+        isMoving = true;
+        currentRow = 11;//left
+     }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
         playerSprite.move({ -playerSpeed * deltaTime,0.f });
+        gunSprite.move({ -playerSpeed * deltaTime,0.f });
+        isMoving = true;
+        currentRow = 9;//right
+     }
+        
+    if (isMoving) {
+        if (animClock.getElapsedTime().asSeconds() > 0.1f) {
+            currentFrame = (currentFrame + 1) % 9; //0->8 cycle , will repeat with 0
+            animClock.restart();
+        }
+    }
+    else {
+        currentFrame = 0;
+    }
+
+    playerSprite.setTextureRect(sf::IntRect({ currentFrame * 64,currentRow * 64 }, { 64,64 })); //64x64 pixel frame
 
 }
 
 void Game::handleAiming() {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-    sf::Vector2f playerPos = playerSprite.getPosition();
+    sf::Vector2f playerPos = gunSprite.getPosition();
     sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePos);
 
     //angle 
@@ -319,17 +371,14 @@ void Game::handleAiming() {
     float angle = std::atan2(dy, dx) * 180.f / 3.14159f;
 
     //set angle to sprite
-    playerSprite.setRotation(sf::degrees(angle));
+    gunSprite.setRotation(sf::degrees(angle));
     
 }
 
 void Game::shoot() {
 
     Bullet b(bulletTexture);
-    b.bulletSprite.setScale({ 0.5f,0.5f });
-    /*b.bulletShape.setFillColor(sf::Color::Yellow);
-    b.bulletShape.setRadius(4.f);
-    b.bulletShape.setPosition(playerSprite.getPosition());*/
+    b.bulletSprite.setScale({ 0.25f,0.25f });
 
     b.bulletSprite.setPosition(playerSprite.getPosition());
 
@@ -409,6 +458,9 @@ void Game::reset() {
 
 
     playerSprite.setPosition({ 400.f,300.f });
+    gunSprite.setPosition(playerSprite.getPosition());
+
+    gameClock.restart();
     isGameOver = false;
 
 
