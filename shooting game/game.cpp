@@ -23,8 +23,6 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
         std::cout << "failed to load the image";
     }
 
-
-
     if (!gameFont.openFromFile("orange juice 2.0.ttf")) {
         std::cout << "failed to load font";
     }
@@ -60,7 +58,7 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
     currentRow = 11; //player facing down
     currentFrame = 0;//col 0
     playerSprite.setTextureRect(sf::IntRect({ currentFrame * 64, currentRow * 64 }, { 64, 64 }));
-    playerSprite.setOrigin({ 32.f,32.f });//center of 64x64 frame
+    playerSprite.setOrigin({ 32.f,32.f+10.f });//center of 64x64 frame
 
     gunSprite.setPosition(playerSprite.getPosition());
 
@@ -145,8 +143,9 @@ void Game::update(float deltaTime) {
     //base case
     if (isGameOver) { return; }
 
-    handleMovement(deltaTime);
+    
     handleAiming();
+    handleMovement(deltaTime);
 
     for (auto& b : bullets) {
         b.bulletSprite.move(b.velocity*deltaTime); //updated: times with deltaTime
@@ -297,8 +296,9 @@ void Game::render() {
             window.draw(z.zombieSprite);
         }
 
-        window.draw(gunSprite);
+        
         window.draw(playerSprite);
+        window.draw(gunSprite);
         window.draw(scoreText);
         window.draw(healthText);
 
@@ -322,13 +322,15 @@ void Game::handleMovement(float deltaTime) {
         playerSprite.move({ 0.f,-playerSpeed * deltaTime });
         gunSprite.move({ 0.f,-playerSpeed * deltaTime });
         isMoving = true;
-        currentRow = 8;//up
+        currentRow = 9;//up
+        
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
         playerSprite.move({ 0.f,playerSpeed * deltaTime });
         gunSprite.move({ 0.f,playerSpeed * deltaTime });
         isMoving = true;
-        currentRow = 10;//down
+        currentRow = 11;//down
+        
 
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
@@ -336,12 +338,16 @@ void Game::handleMovement(float deltaTime) {
         gunSprite.move({ playerSpeed * deltaTime,0.f });
         isMoving = true;
         currentRow = 11;//left
+        handleAiming();
      }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
         playerSprite.move({ -playerSpeed * deltaTime,0.f });
         gunSprite.move({ -playerSpeed * deltaTime,0.f });
         isMoving = true;
         currentRow = 9;//right
+        //handleAiming();
+       
+
      }
         
     if (isMoving) {
@@ -372,6 +378,18 @@ void Game::handleAiming() {
 
     //set angle to sprite
     gunSprite.setRotation(sf::degrees(angle));
+    
+    if (std::abs(angle) > 90.f) {
+        gunSprite.setScale(sf::Vector2f(1.f, -1.f));//mirror at y axis
+        playerSprite.setScale({ -1.f,1.f }); //mirror at x-axis
+    }
+    else {
+
+        gunSprite.setScale({ 1.f, 1.f });  //original gun rotation
+        playerSprite.setScale({ -1.f,1.f });
+        
+
+    }
     
 }
 
