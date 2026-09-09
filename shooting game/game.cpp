@@ -322,14 +322,14 @@ void Game::handleMovement(float deltaTime) {
         playerSprite.move({ 0.f,-playerSpeed * deltaTime });
         gunSprite.move({ 0.f,-playerSpeed * deltaTime });
         isMoving = true;
-        currentRow = 9;//up
+        
         
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
         playerSprite.move({ 0.f,playerSpeed * deltaTime });
         gunSprite.move({ 0.f,playerSpeed * deltaTime });
         isMoving = true;
-        currentRow = 11;//down
+        
         
 
     }
@@ -337,15 +337,15 @@ void Game::handleMovement(float deltaTime) {
         playerSprite.move({ playerSpeed * deltaTime,0.f });
         gunSprite.move({ playerSpeed * deltaTime,0.f });
         isMoving = true;
-        currentRow = 11;//left
-        handleAiming();
+        
+        
      }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
         playerSprite.move({ -playerSpeed * deltaTime,0.f });
         gunSprite.move({ -playerSpeed * deltaTime,0.f });
         isMoving = true;
-        currentRow = 9;//right
-        //handleAiming();
+        
+        
        
 
      }
@@ -378,15 +378,16 @@ void Game::handleAiming() {
 
     //set angle to sprite
     gunSprite.setRotation(sf::degrees(angle));
+
     
     if (std::abs(angle) > 90.f) {
         gunSprite.setScale(sf::Vector2f(1.f, -1.f));//mirror at y axis
-        playerSprite.setScale({ -1.f,1.f }); //mirror at x-axis
+        playerSprite.setScale(sf::Vector2f( - 1.f, 1.f )); //mirror at x-axis
     }
     else {
 
         gunSprite.setScale({ 1.f, 1.f });  //original gun rotation
-        playerSprite.setScale({ -1.f,1.f });
+        playerSprite.setScale({ 1.f,1.f });
         
 
     }
