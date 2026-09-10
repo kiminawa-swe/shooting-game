@@ -76,6 +76,10 @@ private:
 	int currentFrame;//colum
 	sf::Clock animClock;
 
+	//grid for map
+	std::vector<std::vector<int>>map;
+	int tileSize = 32;
+
 
 	//process->update->render
 	
@@ -88,7 +92,9 @@ private:
 	void shoot();
 
 	void spawnZombie();
-	void reset();//reset game 
+	void reset();//reset game
+	void drawMap();
+	bool isWallat(sf::Vector2f pos);
 
 	
 

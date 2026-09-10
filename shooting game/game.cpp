@@ -5,7 +5,7 @@
 #include <iostream>
 
 //constructor
-Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTexture),playerSprite(playerTexture),gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer) {
+Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), gunSprite(gunTexture), playerSprite(playerTexture), gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer) {
 
     if (!gunTexture.loadFromFile("SMG.png")) {
         std::cout << "failed to load the image";
@@ -30,9 +30,9 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
     if (!buffer.loadFromFile("freesound_community-rifle-gunshot-99749.wav")) {
         std::cout << "failed to load sound ";
     }
-    
-   
-    
+
+
+
 
     srand(static_cast<unsigned>(time(0))); // to make random number spread more evenly
 
@@ -45,7 +45,7 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
     gunSprite.setPosition(playerSprite.getPosition());
     //gunSprite.setScale({ 0.25f,0.25f });
     gunSprite.setOrigin({ 21.f,10.f });
-    
+
     /*sf::FloatRect bound = playerSprite.getLocalBounds();
     playerSprite.setOrigin({ 400.f, (bound.size.y / 2)-80.f});*/
 
@@ -58,13 +58,13 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
     currentRow = 11; //player facing down
     currentFrame = 0;//col 0
     playerSprite.setTextureRect(sf::IntRect({ currentFrame * 64, currentRow * 64 }, { 64, 64 }));
-    playerSprite.setOrigin({ 32.f,32.f+10.f });//center of 64x64 frame
+    playerSprite.setOrigin({ 32.f,32.f + 10.f });//center of 64x64 frame
 
     gunSprite.setPosition(playerSprite.getPosition());
 
     //Font and text
 
-    
+
     gameText.setCharacterSize(50);
     gameText.setString("GAME OVER");
     gameText.setFillColor(sf::Color::Red);
@@ -78,7 +78,7 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
     scoreText.setString("Score: 0");
     scoreText.setFillColor(sf::Color::Yellow);
     scoreText.setPosition({ 400.f,0.f });
-    
+
     //health text
     healthText.setCharacterSize(20);
     healthText.setString("Health: 100");
@@ -88,8 +88,16 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
     //sound
     gunSound.setDopplerFactor(25.f);
 
-    
-
+    //Map 1=wall 0=floor
+    map = {
+    { 1,1,1,1,1,1,1,1,1,1 },
+    { 1,0,0,0,0,0,0,0,0,1 },
+    { 1,0,0,0,0,0,0,0,0,1 },
+    { 1,0,0,1,1,0,0,0,0,1 },
+    { 1,0,0,0,0,0,0,0,0,1 },
+    { 1,0,0,0,0,0,0,0,0,1 },
+    { 1,1,1,1,0,1,1,1,1,1 }
+    };
 
 }
 
@@ -287,6 +295,7 @@ void Game::render() {
     if (!isGameOver) {
     window.clear();
     
+    drawMap();
     
         for (auto& b : bullets) {
             window.draw(b.bulletSprite);
@@ -317,38 +326,52 @@ void Game::render() {
 //handling function
 
 void Game::handleMovement(float deltaTime) {
+    sf::Vector2f oldPos = playerSprite.getPosition();
+    sf::Vector2f newPos = oldPos;
+
     bool isMoving=false;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
-        playerSprite.move({ 0.f,-playerSpeed * deltaTime });
-        gunSprite.move({ 0.f,-playerSpeed * deltaTime });
+
+        //playerSprite.move({ 0.f,-playerSpeed * deltaTime });
+        //gunSprite.move({ 0.f,-playerSpeed * deltaTime });
+        newPos -= {0, playerSpeed * deltaTime};
         isMoving = true;
         
         
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
-        playerSprite.move({ 0.f,playerSpeed * deltaTime });
-        gunSprite.move({ 0.f,playerSpeed * deltaTime });
+        /*playerSprite.move({ 0.f,playerSpeed * deltaTime });
+        gunSprite.move({ 0.f,playerSpeed * deltaTime });*/
+        newPos += { 0.f, playerSpeed* deltaTime };
         isMoving = true;
         
         
 
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-        playerSprite.move({ playerSpeed * deltaTime,0.f });
-        gunSprite.move({ playerSpeed * deltaTime,0.f });
+        /*playerSprite.move({ playerSpeed * deltaTime,0.f });
+        gunSprite.move({ playerSpeed * deltaTime,0.f });*/
+        newPos += { playerSpeed* deltaTime, 0.f };
         isMoving = true;
         
         
      }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
-        playerSprite.move({ -playerSpeed * deltaTime,0.f });
-        gunSprite.move({ -playerSpeed * deltaTime,0.f });
+        /*playerSprite.move({ -playerSpeed * deltaTime,0.f });
+        gunSprite.move({ -playerSpeed * deltaTime,0.f });*/
+        newPos -= { playerSpeed * deltaTime, 0.f };
         isMoving = true;
         
         
        
 
      }
+    //check whether it hit wall or not
+    if (!isWallat(newPos)) {
+        sf::Vector2f delta = newPos - oldPos;
+        playerSprite.move(delta);
+        gunSprite.move(delta);
+    }
         
     if (isMoving) {
         if (animClock.getElapsedTime().asSeconds() > 0.1f) {
@@ -483,5 +506,35 @@ void Game::reset() {
     isGameOver = false;
 
 
+}
+
+void Game::drawMap() {
+
+    for (int row = 0;row < map.size();row++) {
+        for (int col = 0;col < map[row].size();col++) {
+
+            sf::RectangleShape tile(sf::Vector2f(tileSize,tileSize)); //32x32 size of one tile
+            tile.setPosition({ (float)(col * tileSize),(float)(row * tileSize) });// * with tile size to prevent overlapping
+
+            if (map[row][col] == 1) {
+                tile.setFillColor(sf::Color(100, 100, 100));
+            }
+            else {
+                tile.setFillColor(sf::Color(200, 200, 150));
+            }
+            window.draw(tile);
+        }
+    }
+}
+
+bool Game::isWallat(sf::Vector2f newPos) {
+    int col = newPos.x / tileSize;
+    int row = newPos.y / tileSize;
+
+    if (col < 0 || col >= map[0].size() || row >= map.size() || row < 0) {
+        return false; //// treat out-of-bounds as a wall (keeps player inside the map)// prevent eg; map[-1][..]
+    }
+
+    return map[row][col] == 1;
 }
 
