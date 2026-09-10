@@ -179,19 +179,26 @@ void Game::update(float deltaTime) {
         sf::Vector2f zombPos = z.zombieSprite.getPosition();
         sf::Vector2f playerPos = playerSprite.getPosition();
 
-        sf::Vector2f direction = playerPos - zombPos;
-
-        float length = sqrt(direction.x * direction.x + direction.y * direction.y);
-
-        if (length > 0.f) {
-            direction /= length;
-
-        }
-       
-
         
 
-        z.zombieSprite.move(z.speed * direction*deltaTime);
+
+            sf::Vector2f direction = playerPos - zombPos;
+
+            float length = sqrt(direction.x * direction.x + direction.y * direction.y);
+
+            if (length > 0.f) {
+                direction /= length;
+
+            }
+
+            sf::Vector2f newPos = zombPos + (z.speed * direction * deltaTime); //check future pos for zombie
+
+            if (!isWallat(newPos) ){
+                z.zombieSprite.move(z.speed * direction * deltaTime);
+            }
+           
+        
+        
 
     }
 
@@ -532,7 +539,7 @@ bool Game::isWallat(sf::Vector2f newPos) {
     int row = newPos.y / tileSize;
 
     if (col < 0 || col >= map[0].size() || row >= map.size() || row < 0) {
-        return false; //// treat out-of-bounds as a wall (keeps player inside the map)// prevent eg; map[-1][..]
+        return false; //// treat out-of-bounds as a wall (keeps player inside the map)// prevent eg; map[-1][..] 
     }
 
     return map[row][col] == 1;
