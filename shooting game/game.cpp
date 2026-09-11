@@ -192,7 +192,7 @@ void Game::update(float deltaTime) {
             }
 
             sf::Vector2f newPos = zombPos + (z.speed * direction * deltaTime); //check future pos for zombie
-
+                                                                               //whether it hit the wall or not
             if (!isWallat(newPos) ){
                 z.zombieSprite.move(z.speed * direction * deltaTime);
             }
@@ -521,7 +521,7 @@ void Game::drawMap() {
         for (int col = 0;col < map[row].size();col++) {
 
             sf::RectangleShape tile(sf::Vector2f(tileSize,tileSize)); //32x32 size of one tile
-            tile.setPosition({ (float)(col * tileSize),(float)(row * tileSize) });// * with tile size to prevent overlapping
+            tile.setPosition({ (float)(col * tileSize)+200.f,(float)(row * tileSize)+200.f });// * with tile size to prevent overlapping
 
             if (map[row][col] == 1) {
                 tile.setFillColor(sf::Color(100, 100, 100));
@@ -535,8 +535,8 @@ void Game::drawMap() {
 }
 
 bool Game::isWallat(sf::Vector2f newPos) {
-    int col = newPos.x / tileSize;
-    int row = newPos.y / tileSize;
+    int col = (newPos.x-200.f) / tileSize;
+    int row = (newPos.y-200.f) / tileSize;
 
     if (col < 0 || col >= map[0].size() || row >= map.size() || row < 0) {
         return false; //// treat out-of-bounds as a wall (keeps player inside the map)// prevent eg; map[-1][..] 
