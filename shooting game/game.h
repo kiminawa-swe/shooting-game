@@ -39,6 +39,9 @@ private:
 	sf::Texture gunTexture;
 	sf::Sprite gunSprite;
 
+	sf::Texture mapTexture;
+	sf::Sprite mapSprite;
+
 	std::vector<Bullet> bullets;
 	float bulletSpeed;
 
@@ -75,6 +78,9 @@ private:
 	int currentRow;
 	int currentFrame;//colum
 	sf::Clock animClock;
+
+	int mapRow;
+	int mapCol;
 
 	//grid for map
 	std::vector<std::vector<int>>map;

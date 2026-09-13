@@ -5,7 +5,10 @@
 #include <iostream>
 
 //constructor
-Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), gunSprite(gunTexture), playerSprite(playerTexture), gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer) {
+Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTexture),gunSprite(gunTexture), playerSprite(playerTexture), gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer) {
+    if (!mapTexture.loadFromFile("GrassCenter.png")) {
+        std::cout << "failed to load the image";
+    }
 
     if (!gunTexture.loadFromFile("SMG.png")) {
         std::cout << "failed to load the image";
@@ -45,9 +48,8 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), gunSprite(gunTextu
     gunSprite.setPosition(playerSprite.getPosition());
     //gunSprite.setScale({ 0.25f,0.25f });
     gunSprite.setOrigin({ 21.f,10.f });
-
-    /*sf::FloatRect bound = playerSprite.getLocalBounds();
-    playerSprite.setOrigin({ 400.f, (bound.size.y / 2)-80.f});*/
+    //MAP tile
+    mapSprite.setTexture(mapTexture, true);
 
     playerSpeed = 250.f;
     bulletSpeed = 500.f;
@@ -59,6 +61,10 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), gunSprite(gunTextu
     currentFrame = 0;//col 0
     playerSprite.setTextureRect(sf::IntRect({ currentFrame * 64, currentRow * 64 }, { 64, 64 }));
     playerSprite.setOrigin({ 32.f,32.f + 10.f });//center of 64x64 frame
+
+    mapRow = 0;
+    mapCol = 0;
+    mapSprite.setTextureRect(sf::IntRect({ mapCol*32,mapRow*32}, { 32, 32 }));
 
     gunSprite.setPosition(playerSprite.getPosition());
 
@@ -516,6 +522,21 @@ void Game::reset() {
 }
 
 void Game::drawMap() {
+
+    int tileW = 32;
+    int tileH = 32;
+
+    for (int y = 0; y < 600; y += tileH) {
+        for (int x = 0; x < 800; x += tileW) {
+            mapSprite.setPosition({ (float)x, (float)y });
+            window.draw(mapSprite);
+        }
+    }
+
+    /*mapSprite.setTextureRect(sf::IntRect({ 1 * 64,1 * 64 }, { 64,64 }));
+    mapSprite.setPosition({ (float)0 * 64,(float)0 * 64 });
+    window.draw(mapSprite);*/
+
 
     for (int row = 0;row < map.size();row++) {
         for (int col = 0;col < map[row].size();col++) {
