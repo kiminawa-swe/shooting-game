@@ -86,6 +86,10 @@ private:
 	std::vector<std::vector<int>>map;
 	int tileSize = 32;
 
+	//Camera view
+	sf::View playerCam;
+	sf::View uiCam;
+
 
 	//process->update->render
 	

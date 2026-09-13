@@ -105,6 +105,12 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
     { 1,1,1,1,0,1,1,1,1,1 }
     };
 
+    //CAMERA VIEW
+    playerCam.setSize({ 800.f,600.f });
+    playerCam.setCenter({ 400.f,300.f });
+
+
+
 }
 
 
@@ -297,7 +303,9 @@ void Game::update(float deltaTime) {
 
     }
 
-
+    //update camera movement
+    sf::Vector2f playerPos = playerSprite.getPosition();
+    playerCam.setCenter({ playerPos.x,playerPos.y });
 
     
 
@@ -308,6 +316,7 @@ void Game::render() {
     if (!isGameOver) {
     window.clear();
     
+    window.setView(playerCam);
     drawMap();
     
         for (auto& b : bullets) {
