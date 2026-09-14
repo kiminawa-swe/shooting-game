@@ -109,6 +109,8 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
     playerCam.setSize({ 800.f,600.f });
     playerCam.setCenter({ 400.f,300.f });
 
+    uiCam.setSize({ 800.f,600.f });
+    uiCam.setCenter({ 400.f,300.f });
 
 
 }
@@ -262,7 +264,7 @@ void Game::update(float deltaTime) {
 
         sf::Vector2f pos = b.bulletSprite.getPosition();
 
-        return pos.x < 0 || pos.x>800 || pos.y < 0 || pos.y>600;
+        return pos.x < 0 || pos.x>800*4 || pos.y < 0 || pos.y>600*4;
 
         };
 
@@ -305,8 +307,13 @@ void Game::update(float deltaTime) {
 
     //update camera movement
     sf::Vector2f playerPos = playerSprite.getPosition();
-    playerCam.setCenter({ playerPos.x,playerPos.y });
-
+    float mapWidth = 1000 * 32.f;
+    float mapHeight = 750 * 32.f;
+    //clamp will make the cam center between min and max
+    float camX = std::clamp(playerPos.x, 400.f, mapWidth - 400.f); //clamp(value,minValue,maxValue)
+    float camY = std::clamp(playerPos.y, 300.f, mapHeight - 300.f);
+    playerCam.setCenter({ camX,camY });
+    
     
 
 }
@@ -318,7 +325,6 @@ void Game::render() {
     
     window.setView(playerCam);
     drawMap();
-    
         for (auto& b : bullets) {
             window.draw(b.bulletSprite);
         }
@@ -330,13 +336,18 @@ void Game::render() {
         
         window.draw(playerSprite);
         window.draw(gunSprite);
+
+        window.setView(uiCam);
+
         window.draw(scoreText);
         window.draw(healthText);
 
+        
     }
     else {
         window.draw(gameText);
     }
+   
     
     window.display();
 
@@ -412,7 +423,7 @@ void Game::handleMovement(float deltaTime) {
 void Game::handleAiming() {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
     sf::Vector2f playerPos = gunSprite.getPosition();
-    sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePos);
+    sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePos,playerCam);//aim relative to playerCam, not ui
 
     //angle 
 
@@ -447,7 +458,7 @@ void Game::shoot() {
     b.bulletSprite.setPosition(playerSprite.getPosition());
 
     sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
-    sf::Vector2f mousePos = window.mapPixelToCoords(mousePixel);
+    sf::Vector2f mousePos = window.mapPixelToCoords(mousePixel,playerCam);//relative to playerCam
     sf::Vector2f direction = mousePos - playerSprite.getPosition();
 
     float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);//theorem
@@ -535,8 +546,8 @@ void Game::drawMap() {
     int tileW = 32;
     int tileH = 32;
 
-    for (int y = 0; y < 600; y += tileH) {
-        for (int x = 0; x < 800; x += tileW) {
+    for (int y = 0; y < 600*4; y += tileH) {
+        for (int x = 0; x < 800*4; x += tileW) {
             mapSprite.setPosition({ (float)x, (float)y });
             window.draw(mapSprite);
         }
