@@ -5,7 +5,7 @@
 #include <iostream>
 
 //constructor
-Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTexture),gunSprite(gunTexture), playerSprite(playerTexture), gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer) {
+Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTexture),gunSprite(gunTexture), playerSprite(playerTexture),introText(gameFont),gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer) {
     if (!mapTexture.loadFromFile("GrassCenter.png")) {
         std::cout << "failed to load the image";
     }
@@ -79,7 +79,14 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
     gameText.setString("GAME OVER");
     gameText.setFillColor(sf::Color::Red);
     gameText.setPosition({ 300.f,250.f });
-    isGameOver = false;
+    
+
+    introText.setCharacterSize(40);
+    introText.setString("PRESS ENTER");
+    introText.setPosition({ 200.f,300.f });
+    introText.setFillColor(sf::Color::Green);
+
+
     //
 
     //score text
@@ -119,6 +126,10 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
     uiCam.setSize({ 800.f,600.f });
     uiCam.setCenter({ 400.f,300.f });
 
+    //GAMESTATE
+
+    currentState = GAMESTATE::intro;
+
 
 }
 
@@ -150,20 +161,35 @@ void Game::processEvent() {
         if (event->is<sf::Event::Closed>())
             window.close();
 
-        if (!isGameOver &&event->is<sf::Event::MouseButtonPressed>()) {
-            //handle shooting 
-            shoot();
-            gunSound.play();
-     
-            
+        if (currentState == GAMESTATE::intro) {
+            if (event->is<sf::Event::KeyPressed>()) {
+                const auto* keyEvent = event->getIf<sf::Event::KeyPressed>();
 
-
-
+                if (keyEvent->code == sf::Keyboard::Key::Enter) {
+                    currentState = GAMESTATE::playing;
+                }
+            }
         }
-        
-        if (isGameOver && event->is < sf::Event::KeyPressed>()) {
+        else if (currentState == GAMESTATE::playing) {
+            if (!isGameOver && event->is<sf::Event::MouseButtonPressed>()) {
+                //handle shooting 
+                shoot();
+                gunSound.play();
+            }
+        }
+        else if(currentState==GAMESTATE::gameover){//GAMESTATE::gameover
+            if (event->is < sf::Event::KeyPressed>()) {
             reset();
+            
         }
+        }
+                                                  
+
+
+
+        
+        
+       
     }
 
 
@@ -171,7 +197,7 @@ void Game::processEvent() {
 
 void Game::update(float deltaTime) {
     //base case
-    if (isGameOver) { return; }
+    if (currentState!=GAMESTATE::playing) { return; }
     
     handleAiming();
     handleMovement(deltaTime);
@@ -300,7 +326,7 @@ void Game::update(float deltaTime) {
                 healthText.setString("Health: " + std::to_string(playerHealth));
 
                 if (playerHealth <= 0) {
-                    isGameOver = true;
+                    currentState=GAMESTATE::gameover;
                 }
                 
 
@@ -326,8 +352,11 @@ void Game::update(float deltaTime) {
 }
 
 void Game::render() {
-
-    if (!isGameOver) {
+    if (currentState == GAMESTATE::intro) {
+        window.setView(uiCam);
+        window.draw(introText);
+    }
+    if (currentState==GAMESTATE::playing) {
     window.clear();
     window.setView(playerCam);
     drawMap();
@@ -350,8 +379,10 @@ void Game::render() {
 
         
     }
-    else {
+    else if(currentState==GAMESTATE::gameover){
+        
         window.draw(gameText);
+
     }
    
     
@@ -542,8 +573,7 @@ void Game::reset() {
     gunSprite.setPosition(playerSprite.getPosition());
 
     gameClock.restart();
-    isGameOver = false;
-
+    currentState = GAMESTATE::playing;
 
 }
 

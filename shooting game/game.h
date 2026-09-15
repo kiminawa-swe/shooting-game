@@ -3,6 +3,12 @@
 #include <SFML/Audio.hpp>
 #include <vector>
 
+enum class GAMESTATE {
+	intro,
+	playing,
+	gameover
+};
+
 struct Zombie {
 	
 	sf::Sprite zombieSprite;
@@ -62,6 +68,8 @@ private:
 	sf::Text gameText;
 	bool isGameOver;
 
+	sf::Text introText;
+
 	//score
 	int score;
 	sf::Text scoreText;
@@ -93,6 +101,9 @@ private:
 	//Camera view
 	sf::View playerCam;
 	sf::View uiCam;
+
+	//GAMESTATE
+	GAMESTATE currentState;
 
 
 	//process->update->render
