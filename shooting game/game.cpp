@@ -34,6 +34,10 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
         std::cout << "failed to load sound ";
     }
 
+    if (!soundTrack.openFromFile("20. Grasswalk IN-GAME.ogg")) {
+        std::cout << "failed to load sound ";
+    }
+
 
 
 
@@ -94,6 +98,9 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
     //sound
     gunSound.setDopplerFactor(25.f);
 
+    //SoundTrack
+    soundTrack.setLooping(true);
+    soundTrack.play();
     //Map 1=wall 0=floor
     map = {
     { 1,1,1,1,1,1,1,1,1,1 },
@@ -124,7 +131,7 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
 void Game::run() {
 
     while (window.isOpen()) {
-    
+
         float deltaTime = clock.restart().asSeconds();
         processEvent();
         update(deltaTime);
@@ -147,12 +154,13 @@ void Game::processEvent() {
             //handle shooting 
             shoot();
             gunSound.play();
+     
             
 
 
 
         }
-
+        
         if (isGameOver && event->is < sf::Event::KeyPressed>()) {
             reset();
         }
@@ -164,7 +172,6 @@ void Game::processEvent() {
 void Game::update(float deltaTime) {
     //base case
     if (isGameOver) { return; }
-
     
     handleAiming();
     handleMovement(deltaTime);
@@ -307,8 +314,8 @@ void Game::update(float deltaTime) {
 
     //update camera movement
     sf::Vector2f playerPos = playerSprite.getPosition();
-    float mapWidth = 1000 * 32.f;
-    float mapHeight = 750 * 32.f;
+    float mapWidth = 100 * 32.f;
+    float mapHeight = 75 * 32.f;
     //clamp will make the cam center between min and max
     float camX = std::clamp(playerPos.x, 400.f, mapWidth - 400.f); //clamp(value,minValue,maxValue)
     float camY = std::clamp(playerPos.y, 300.f, mapHeight - 300.f);
@@ -322,7 +329,6 @@ void Game::render() {
 
     if (!isGameOver) {
     window.clear();
-    
     window.setView(playerCam);
     drawMap();
         for (auto& b : bullets) {

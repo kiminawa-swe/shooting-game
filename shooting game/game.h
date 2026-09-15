@@ -73,6 +73,10 @@ private:
 	sf::SoundBuffer buffer;
 	sf::Sound gunSound;
 
+	//Music soundTrack
+	sf::Music soundTrack;
+	
+
 	//sprite-sheet
 
 	int currentRow;
