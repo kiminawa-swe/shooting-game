@@ -5,7 +5,10 @@
 #include <iostream>
 
 //constructor
-Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTexture),playerSprite(playerTexture),gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer) {
+Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTexture),gunSprite(gunTexture), playerSprite(playerTexture),introText(gameFont),gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer) {
+    if (!mapTexture.loadFromFile("GrassCenter.png")) {
+        std::cout << "failed to load the image";
+    }
 
     if (!gunTexture.loadFromFile("SMG.png")) {
         std::cout << "failed to load the image";
@@ -30,9 +33,21 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
     if (!buffer.loadFromFile("freesound_community-rifle-gunshot-99749.wav")) {
         std::cout << "failed to load sound ";
     }
-    
-   
-    
+
+    if (!introSoundTrack.openFromFile("02. Crazy Dave (Intro Theme).ogg")) {
+        std::cout << "failed to load sound ";
+    }
+
+    if (!soundTrack.openFromFile("20. Grasswalk IN-GAME.ogg")) {
+        std::cout << "failed to load sound ";
+    }
+
+    if (!gameOverSound.openFromFile("game-over-from-plants-vs-zombies-made-with-Voicemod.ogg")) {
+        std::cout << "failed to load sound ";
+    }
+
+
+
 
     srand(static_cast<unsigned>(time(0))); // to make random number spread more evenly
 
@@ -45,9 +60,8 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
     gunSprite.setPosition(playerSprite.getPosition());
     //gunSprite.setScale({ 0.25f,0.25f });
     gunSprite.setOrigin({ 21.f,10.f });
-    
-    /*sf::FloatRect bound = playerSprite.getLocalBounds();
-    playerSprite.setOrigin({ 400.f, (bound.size.y / 2)-80.f});*/
+    //MAP tile
+    mapSprite.setTexture(mapTexture, true);
 
     playerSpeed = 250.f;
     bulletSpeed = 500.f;
@@ -58,18 +72,29 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
     currentRow = 11; //player facing down
     currentFrame = 0;//col 0
     playerSprite.setTextureRect(sf::IntRect({ currentFrame * 64, currentRow * 64 }, { 64, 64 }));
-    playerSprite.setOrigin({ 32.f,32.f+10.f });//center of 64x64 frame
+    playerSprite.setOrigin({ 32.f,32.f + 10.f });//center of 64x64 frame
+
+    mapRow = 0;
+    mapCol = 0;
+    mapSprite.setTextureRect(sf::IntRect({ mapCol*32,mapRow*32}, { 32, 32 }));
 
     gunSprite.setPosition(playerSprite.getPosition());
 
     //Font and text
 
-    
+
     gameText.setCharacterSize(50);
     gameText.setString("GAME OVER");
     gameText.setFillColor(sf::Color::Red);
     gameText.setPosition({ 300.f,250.f });
-    isGameOver = false;
+    
+    introText.setFont(gameFont);
+    introText.setCharacterSize(40);
+    introText.setString("PRESS ENTER");
+    introText.setPosition({ 200.f,300.f });
+    introText.setFillColor(sf::Color::Green);
+
+
     //
 
     //score text
@@ -78,7 +103,7 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
     scoreText.setString("Score: 0");
     scoreText.setFillColor(sf::Color::Yellow);
     scoreText.setPosition({ 400.f,0.f });
-    
+
     //health text
     healthText.setCharacterSize(20);
     healthText.setString("Health: 100");
@@ -88,7 +113,32 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
     //sound
     gunSound.setDopplerFactor(25.f);
 
+    //SoundTrack
+    introSoundTrack.setLooping(true);
+    soundTrack.setLooping(true);
+    gameOverSound.setLooping(false);
     
+    //Map 1=wall 0=floor
+    map = {
+    { 1,1,1,1,1,1,1,1,1,1 },
+    { 1,0,0,0,0,0,0,0,0,1 },
+    { 1,0,0,0,0,0,0,0,0,1 },
+    { 1,0,0,1,1,0,0,0,0,1 },
+    { 1,0,0,0,0,0,0,0,0,1 },
+    { 1,0,0,0,0,0,0,0,0,1 },
+    { 1,1,1,1,0,1,1,1,1,1 }
+    };
+
+    //CAMERA VIEW
+    playerCam.setSize({ 800.f,600.f });
+    playerCam.setCenter({ 400.f,300.f });
+
+    uiCam.setSize({ 800.f,600.f });
+    uiCam.setCenter({ 400.f,300.f });
+
+    //GAMESTATE
+
+    changeState(GAMESTATE::intro);
 
 
 }
@@ -102,7 +152,7 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"),gunSprite(gunTextur
 void Game::run() {
 
     while (window.isOpen()) {
-    
+
         float deltaTime = clock.restart().asSeconds();
         processEvent();
         update(deltaTime);
@@ -121,19 +171,42 @@ void Game::processEvent() {
         if (event->is<sf::Event::Closed>())
             window.close();
 
-        if (!isGameOver &&event->is<sf::Event::MouseButtonPressed>()) {
-            //handle shooting 
-            shoot();
-            gunSound.play();
+        if (currentState == GAMESTATE::intro) {
+            if (event->is<sf::Event::KeyPressed>()) {
+                const auto* keyEvent = event->getIf<sf::Event::KeyPressed>();
+
+                if (keyEvent->code == sf::Keyboard::Key::Enter) {
+                    
+                    changeState(GAMESTATE::playing);
+                }
+            }
+        }
+        else if (currentState == GAMESTATE::playing) {
             
+            if (event->is<sf::Event::MouseButtonPressed>()) {
+                //handle shooting 
+                shoot();
+                gunSound.play();
+            }
 
-
-
+            
         }
-
-        if (isGameOver && event->is < sf::Event::KeyPressed>()) {
-            reset();
+        else if(currentState==GAMESTATE::gameover){//GAMESTATE::gameover
+            
+            if (event->is < sf::Event::KeyPressed>()) {
+                
+                reset();
+                changeState(GAMESTATE::intro);
+            
         }
+        }
+                                                  
+
+
+
+        
+        
+       
     }
 
 
@@ -141,8 +214,7 @@ void Game::processEvent() {
 
 void Game::update(float deltaTime) {
     //base case
-    if (isGameOver) { return; }
-
+    if (currentState!=GAMESTATE::playing) { return; }
     
     handleAiming();
     handleMovement(deltaTime);
@@ -171,19 +243,26 @@ void Game::update(float deltaTime) {
         sf::Vector2f zombPos = z.zombieSprite.getPosition();
         sf::Vector2f playerPos = playerSprite.getPosition();
 
-        sf::Vector2f direction = playerPos - zombPos;
-
-        float length = sqrt(direction.x * direction.x + direction.y * direction.y);
-
-        if (length > 0.f) {
-            direction /= length;
-
-        }
-       
-
         
 
-        z.zombieSprite.move(z.speed * direction*deltaTime);
+
+            sf::Vector2f direction = playerPos - zombPos;
+
+            float length = sqrt(direction.x * direction.x + direction.y * direction.y);
+
+            if (length > 0.f) {
+                direction /= length;
+
+            }
+
+            sf::Vector2f newPos = zombPos + (z.speed * direction * deltaTime); //check future pos for zombie
+                                                                               //whether it hit the wall or not
+            if (!isWallat(newPos) ){
+                z.zombieSprite.move(z.speed * direction * deltaTime);
+            }
+           
+        
+        
 
     }
 
@@ -235,7 +314,7 @@ void Game::update(float deltaTime) {
 
         sf::Vector2f pos = b.bulletSprite.getPosition();
 
-        return pos.x < 0 || pos.x>800 || pos.y < 0 || pos.y>600;
+        return pos.x < 0 || pos.x>800*4 || pos.y < 0 || pos.y>600*4;
 
         };
 
@@ -264,7 +343,7 @@ void Game::update(float deltaTime) {
                 healthText.setString("Health: " + std::to_string(playerHealth));
 
                 if (playerHealth <= 0) {
-                    isGameOver = true;
+                    changeState(GAMESTATE::gameover);
                 }
                 
 
@@ -276,18 +355,29 @@ void Game::update(float deltaTime) {
 
     }
 
-
-
+    //update camera movement
+    sf::Vector2f playerPos = playerSprite.getPosition();
+    float mapWidth = 100 * 32.f;
+    float mapHeight = 75 * 32.f;
+    //clamp will make the cam center between min and max
+    float camX = std::clamp(playerPos.x, 400.f, mapWidth - 400.f); //clamp(value,minValue,maxValue)
+    float camY = std::clamp(playerPos.y, 300.f, mapHeight - 300.f);
+    playerCam.setCenter({ camX,camY });
+    
     
 
 }
 
 void Game::render() {
-
-    if (!isGameOver) {
+    if (currentState == GAMESTATE::intro) {
+        window.clear();
+        window.setView(uiCam);
+        window.draw(introText);
+    }
+    else if (currentState==GAMESTATE::playing) {
     window.clear();
-    
-    
+    window.setView(playerCam);
+    drawMap();
         for (auto& b : bullets) {
             window.draw(b.bulletSprite);
         }
@@ -299,13 +389,20 @@ void Game::render() {
         
         window.draw(playerSprite);
         window.draw(gunSprite);
+
+        window.setView(uiCam);
+
         window.draw(scoreText);
         window.draw(healthText);
 
+        
     }
-    else {
+    else if(currentState==GAMESTATE::gameover){
+        
         window.draw(gameText);
+
     }
+   
     
     window.display();
 
@@ -317,38 +414,52 @@ void Game::render() {
 //handling function
 
 void Game::handleMovement(float deltaTime) {
+    sf::Vector2f oldPos = playerSprite.getPosition();
+    sf::Vector2f newPos = oldPos;
+
     bool isMoving=false;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
-        playerSprite.move({ 0.f,-playerSpeed * deltaTime });
-        gunSprite.move({ 0.f,-playerSpeed * deltaTime });
+
+        //playerSprite.move({ 0.f,-playerSpeed * deltaTime });
+        //gunSprite.move({ 0.f,-playerSpeed * deltaTime });
+        newPos -= {0, playerSpeed * deltaTime};
         isMoving = true;
         
         
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
-        playerSprite.move({ 0.f,playerSpeed * deltaTime });
-        gunSprite.move({ 0.f,playerSpeed * deltaTime });
+        /*playerSprite.move({ 0.f,playerSpeed * deltaTime });
+        gunSprite.move({ 0.f,playerSpeed * deltaTime });*/
+        newPos += { 0.f, playerSpeed* deltaTime };
         isMoving = true;
         
         
 
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-        playerSprite.move({ playerSpeed * deltaTime,0.f });
-        gunSprite.move({ playerSpeed * deltaTime,0.f });
+        /*playerSprite.move({ playerSpeed * deltaTime,0.f });
+        gunSprite.move({ playerSpeed * deltaTime,0.f });*/
+        newPos += { playerSpeed* deltaTime, 0.f };
         isMoving = true;
         
         
      }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
-        playerSprite.move({ -playerSpeed * deltaTime,0.f });
-        gunSprite.move({ -playerSpeed * deltaTime,0.f });
+        /*playerSprite.move({ -playerSpeed * deltaTime,0.f });
+        gunSprite.move({ -playerSpeed * deltaTime,0.f });*/
+        newPos -= { playerSpeed * deltaTime, 0.f };
         isMoving = true;
         
         
        
 
      }
+    //check whether it hit wall or not
+    if (!isWallat(newPos)) {
+        sf::Vector2f delta = newPos - oldPos;
+        playerSprite.move(delta);
+        gunSprite.move(delta);
+    }
         
     if (isMoving) {
         if (animClock.getElapsedTime().asSeconds() > 0.1f) {
@@ -367,7 +478,7 @@ void Game::handleMovement(float deltaTime) {
 void Game::handleAiming() {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
     sf::Vector2f playerPos = gunSprite.getPosition();
-    sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePos);
+    sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePos,playerCam);//aim relative to playerCam, not ui
 
     //angle 
 
@@ -402,7 +513,7 @@ void Game::shoot() {
     b.bulletSprite.setPosition(playerSprite.getPosition());
 
     sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
-    sf::Vector2f mousePos = window.mapPixelToCoords(mousePixel);
+    sf::Vector2f mousePos = window.mapPixelToCoords(mousePixel,playerCam);//relative to playerCam
     sf::Vector2f direction = mousePos - playerSprite.getPosition();
 
     float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);//theorem
@@ -480,8 +591,80 @@ void Game::reset() {
     gunSprite.setPosition(playerSprite.getPosition());
 
     gameClock.restart();
-    isGameOver = false;
+    
+    //currentState = GAMESTATE::playing;
 
+}
+
+void Game::drawMap() {
+
+    int tileW = 32;
+    int tileH = 32;
+
+    for (int y = 0; y < 600*4; y += tileH) {
+        for (int x = 0; x < 800*4; x += tileW) {
+            mapSprite.setPosition({ (float)x, (float)y });
+            window.draw(mapSprite);
+        }
+    }
+
+    /*mapSprite.setTextureRect(sf::IntRect({ 1 * 64,1 * 64 }, { 64,64 }));
+    mapSprite.setPosition({ (float)0 * 64,(float)0 * 64 });
+    window.draw(mapSprite);*/
+
+
+    for (int row = 0;row < map.size();row++) {
+        for (int col = 0;col < map[row].size();col++) {
+
+            sf::RectangleShape tile(sf::Vector2f(tileSize,tileSize)); //32x32 size of one tile
+            tile.setPosition({ (float)(col * tileSize)+200.f,(float)(row * tileSize)+200.f });// * with tile size to prevent overlapping
+
+            if (map[row][col] == 1) {
+                tile.setFillColor(sf::Color(100, 100, 100));
+            }
+            else {
+                tile.setFillColor(sf::Color(200, 200, 150));
+            }
+            window.draw(tile);
+        }
+    }
+}
+
+bool Game::isWallat(sf::Vector2f newPos) {
+    int col = (newPos.x-200.f) / tileSize;
+    int row = (newPos.y-200.f) / tileSize;
+
+    if (col < 0 || col >= map[0].size() || row >= map.size() || row < 0) {
+        return false; //// treat out-of-bounds as a wall (keeps player inside the map)// prevent eg; map[-1][..] 
+    }
+
+    return map[row][col] == 1;
+}
+
+void Game::changeState(GAMESTATE newState) {
+    introSoundTrack.stop();
+    soundTrack.stop();
+    gameOverSound.stop();
+    //here we also change the currentState to newState
+    currentState = newState;
+    switch (newState) {
+
+    case GAMESTATE::intro:
+        introSoundTrack.play();
+        break;
+    
+    case GAMESTATE::playing:
+        introSoundTrack.pause();
+        soundTrack.play();
+        break;
+
+    case GAMESTATE::gameover:
+        introSoundTrack.pause();
+        soundTrack.pause();
+        gameOverSound.play();
+        break;
+
+}
 
 }
 

@@ -3,6 +3,12 @@
 #include <SFML/Audio.hpp>
 #include <vector>
 
+enum class GAMESTATE {
+	intro,
+	playing,
+	gameover
+};
+
 struct Zombie {
 	
 	sf::Sprite zombieSprite;
@@ -39,6 +45,9 @@ private:
 	sf::Texture gunTexture;
 	sf::Sprite gunSprite;
 
+	sf::Texture mapTexture;
+	sf::Sprite mapSprite;
+
 	std::vector<Bullet> bullets;
 	float bulletSpeed;
 
@@ -57,7 +66,9 @@ private:
 	//Font
 	sf::Font gameFont;
 	sf::Text gameText;
-	bool isGameOver;
+	
+
+	sf::Text introText;
 
 	//score
 	int score;
@@ -70,11 +81,30 @@ private:
 	sf::SoundBuffer buffer;
 	sf::Sound gunSound;
 
+	//Music soundTrack
+	sf::Music introSoundTrack;
+	sf::Music soundTrack;
+	sf::Music gameOverSound;
+
 	//sprite-sheet
 
 	int currentRow;
 	int currentFrame;//colum
 	sf::Clock animClock;
+
+	int mapRow;
+	int mapCol;
+
+	//grid for map
+	std::vector<std::vector<int>>map;
+	int tileSize = 32;
+
+	//Camera view
+	sf::View playerCam;
+	sf::View uiCam;
+
+	//GAMESTATE
+	GAMESTATE currentState;
 
 
 	//process->update->render
@@ -88,8 +118,11 @@ private:
 	void shoot();
 
 	void spawnZombie();
-	void reset();//reset game 
+	void reset();//reset game
+	void drawMap();
+	bool isWallat(sf::Vector2f pos);
 
+	void changeState(GAMESTATE newState);
 	
 
 	
