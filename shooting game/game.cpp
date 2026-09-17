@@ -34,7 +34,15 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
         std::cout << "failed to load sound ";
     }
 
+    if (!introSoundTrack.openFromFile("02. Crazy Dave (Intro Theme).ogg")) {
+        std::cout << "failed to load sound ";
+    }
+
     if (!soundTrack.openFromFile("20. Grasswalk IN-GAME.ogg")) {
+        std::cout << "failed to load sound ";
+    }
+
+    if (!gameOverSound.openFromFile("game-over-from-plants-vs-zombies-made-with-Voicemod.ogg")) {
         std::cout << "failed to load sound ";
     }
 
@@ -80,7 +88,7 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
     gameText.setFillColor(sf::Color::Red);
     gameText.setPosition({ 300.f,250.f });
     
-
+    introText.setFont(gameFont);
     introText.setCharacterSize(40);
     introText.setString("PRESS ENTER");
     introText.setPosition({ 200.f,300.f });
@@ -106,8 +114,10 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
     gunSound.setDopplerFactor(25.f);
 
     //SoundTrack
+    introSoundTrack.setLooping(true);
     soundTrack.setLooping(true);
-    soundTrack.play();
+    gameOverSound.setLooping(false);
+    
     //Map 1=wall 0=floor
     map = {
     { 1,1,1,1,1,1,1,1,1,1 },
@@ -128,7 +138,7 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
 
     //GAMESTATE
 
-    currentState = GAMESTATE::intro;
+    changeState(GAMESTATE::intro);
 
 
 }
@@ -166,20 +176,27 @@ void Game::processEvent() {
                 const auto* keyEvent = event->getIf<sf::Event::KeyPressed>();
 
                 if (keyEvent->code == sf::Keyboard::Key::Enter) {
-                    currentState = GAMESTATE::playing;
+                    
+                    changeState(GAMESTATE::playing);
                 }
             }
         }
         else if (currentState == GAMESTATE::playing) {
-            if (!isGameOver && event->is<sf::Event::MouseButtonPressed>()) {
+            
+            if (event->is<sf::Event::MouseButtonPressed>()) {
                 //handle shooting 
                 shoot();
                 gunSound.play();
             }
+
+            
         }
         else if(currentState==GAMESTATE::gameover){//GAMESTATE::gameover
+            
             if (event->is < sf::Event::KeyPressed>()) {
-            reset();
+                
+                reset();
+                changeState(GAMESTATE::intro);
             
         }
         }
@@ -326,7 +343,7 @@ void Game::update(float deltaTime) {
                 healthText.setString("Health: " + std::to_string(playerHealth));
 
                 if (playerHealth <= 0) {
-                    currentState=GAMESTATE::gameover;
+                    changeState(GAMESTATE::gameover);
                 }
                 
 
@@ -353,10 +370,11 @@ void Game::update(float deltaTime) {
 
 void Game::render() {
     if (currentState == GAMESTATE::intro) {
+        window.clear();
         window.setView(uiCam);
         window.draw(introText);
     }
-    if (currentState==GAMESTATE::playing) {
+    else if (currentState==GAMESTATE::playing) {
     window.clear();
     window.setView(playerCam);
     drawMap();
@@ -573,7 +591,8 @@ void Game::reset() {
     gunSprite.setPosition(playerSprite.getPosition());
 
     gameClock.restart();
-    currentState = GAMESTATE::playing;
+    
+    //currentState = GAMESTATE::playing;
 
 }
 
@@ -620,5 +639,32 @@ bool Game::isWallat(sf::Vector2f newPos) {
     }
 
     return map[row][col] == 1;
+}
+
+void Game::changeState(GAMESTATE newState) {
+    introSoundTrack.stop();
+    soundTrack.stop();
+    gameOverSound.stop();
+    //here we also change the currentState to newState
+    currentState = newState;
+    switch (newState) {
+
+    case GAMESTATE::intro:
+        introSoundTrack.play();
+        break;
+    
+    case GAMESTATE::playing:
+        introSoundTrack.pause();
+        soundTrack.play();
+        break;
+
+    case GAMESTATE::gameover:
+        introSoundTrack.pause();
+        soundTrack.pause();
+        gameOverSound.play();
+        break;
+
+}
+
 }
 

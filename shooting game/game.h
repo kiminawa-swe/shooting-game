@@ -66,7 +66,7 @@ private:
 	//Font
 	sf::Font gameFont;
 	sf::Text gameText;
-	bool isGameOver;
+	
 
 	sf::Text introText;
 
@@ -82,8 +82,9 @@ private:
 	sf::Sound gunSound;
 
 	//Music soundTrack
+	sf::Music introSoundTrack;
 	sf::Music soundTrack;
-	
+	sf::Music gameOverSound;
 
 	//sprite-sheet
 
@@ -121,6 +122,7 @@ private:
 	void drawMap();
 	bool isWallat(sf::Vector2f pos);
 
+	void changeState(GAMESTATE newState);
 	
 
 	
