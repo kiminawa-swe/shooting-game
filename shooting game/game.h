@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <vector>
+#include <memory>
 
 enum class GAMESTATE {
 	intro,
@@ -9,12 +10,49 @@ enum class GAMESTATE {
 	gameover
 };
 
-struct Zombie {
+class Zombie {
+protected:
 	
-	sf::Sprite zombieSprite;
-	float speed;
-	//this way ,we can reuse same texture
-	Zombie(sf::Texture& tex):zombieSprite(tex){} //only need the reference of the texture
+	sf::Sprite zombSprite;
+	float zombSpeed;
+	int zombHealth;
+	
+public:
+	//this way ,we can reuse same texture for different sprite
+	Zombie(sf::Texture& tex, float speed, int health) :zombSprite(tex), zombSpeed(speed), zombHealth(health) {} //only need the reference of the texture
+
+	virtual ~Zombie(){} //destructor
+
+	sf::Sprite& getSprite(){ return zombSprite;}
+	float getSpeed() const { return zombSpeed; }
+	void takeDamage(int amount) { zombHealth -= amount;}
+	bool isDead() const { return zombHealth <= 0; }
+
+	virtual void updateAnimation(float deltaTime,float directionX){} //by default: this does nothing
+
+	
+
+	
+};
+
+class NormalZombie :public Zombie {
+public:
+	NormalZombie(sf::Texture& tex) :Zombie(tex,80.f, 1) {};
+
+};
+
+class FastZombie :public Zombie {
+private:
+	
+	int currentRow; //38
+	int currentFrame=0; //frame 8
+	sf::Clock animClock;
+
+public:
+	FastZombie(sf::Texture& tex) :Zombie(tex, 100.f, 3) {};
+
+	void updateAnimation(float deltaTime,float directionX) override;
+
 };
 
 struct Bullet {
@@ -39,6 +77,7 @@ private:
 	float playerSpeed;
 
 	sf::Texture zombTexture;
+	sf::Texture fastZombieTexture;
 
 	sf::Texture bulletTexture;
 
@@ -51,7 +90,7 @@ private:
 	std::vector<Bullet> bullets;
 	float bulletSpeed;
 
-	std::vector<Zombie>zombies;
+	std::vector<std::shared_ptr<Zombie>>zombies;
 	sf::Clock spawnClock; // use to give time for zombie to spawn
 
 	//deal with player damage
