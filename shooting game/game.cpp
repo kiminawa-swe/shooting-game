@@ -22,6 +22,10 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
         std::cout << "failed to load the image";
     }
 
+    if (!fastZombieTexture.loadFromFile("nigaZombie.png")) {
+        std::cout << "failed to load the image";
+    }
+
     if (!bulletTexture.loadFromFile("Bullet.png")) {
         std::cout << "failed to load the image";
     }
@@ -143,6 +147,27 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
 
 }
 
+void FastZombie::updateAnimation(float deltaTime,float directionX) {
+    //face left , face right 
+    zombSprite.setOrigin({ 32.f,32.f });
+    currentRow = 41;
+   
+    if (animClock.getElapsedTime().asSeconds() > 0.1f) {
+        currentFrame = (currentFrame + 1) % 8; //0-7 frame
+        animClock.restart();
+    }
+
+    if (directionX < 0) {
+        zombSprite.setScale({ -1,1 });
+    }
+    else {
+        zombSprite.setScale({ 1,1 });
+    }
+    
+    zombSprite.setTextureRect(sf::IntRect({ currentFrame * 64,currentRow * 64 }, { 64,64 }));
+
+
+}
 
 
 
@@ -219,6 +244,7 @@ void Game::update(float deltaTime) {
     handleAiming();
     handleMovement(deltaTime);
 
+
     for (auto& b : bullets) {
         b.bulletSprite.move(b.velocity*deltaTime); //updated: times with deltaTime
 
@@ -240,7 +266,7 @@ void Game::update(float deltaTime) {
 
     for (auto& z : zombies) {
         //zombies movement here
-        sf::Vector2f zombPos = z.zombieSprite.getPosition();
+        sf::Vector2f zombPos = z->getSprite().getPosition();
         sf::Vector2f playerPos = playerSprite.getPosition();
 
         
@@ -255,12 +281,14 @@ void Game::update(float deltaTime) {
 
             }
 
-            sf::Vector2f newPos = zombPos + (z.speed * direction * deltaTime); //check future pos for zombie
+            sf::Vector2f newPos = zombPos + ( z->getSpeed() * direction * deltaTime); //check future pos for zombie
                                                                                //whether it hit the wall or not
             if (!isWallat(newPos) ){
-                z.zombieSprite.move(z.speed * direction * deltaTime);
+                z->getSprite().move( z->getSpeed() * direction * deltaTime);
             }
            
+            z->updateAnimation(deltaTime,direction.x);
+            //z->getSprite().setTextureRect(sf::IntRect({5 * 64,41 * 64}, {64,64}));
         
         
 
@@ -273,7 +301,7 @@ void Game::update(float deltaTime) {
             //get the position first
 
             sf::Vector2f bulletPos = bullets[i].bulletSprite.getPosition();
-            sf::Vector2f zombiePos = zombies[j].zombieSprite.getPosition();
+            sf::Vector2f zombiePos = zombies[j]->getSprite().getPosition();
 
             //to calculate distance
 
@@ -286,14 +314,20 @@ void Game::update(float deltaTime) {
             float collisionRange = 10.f + 15.f;
 
             //if the distance < collision range, it mean collision occur
+            int bulletDamage = 1;
 
             if (distance < collisionRange) {
+
                 bullets.erase(bullets.begin()+i);  //syntax: vec.begin() +i 
-                zombies.erase(zombies.begin()+j);
 
-                score += 10;
-                scoreText.setString("Score: "+std::to_string(score))  ;
+                zombies[j]->takeDamage(bulletDamage);
 
+                if (zombies[j]->isDead()) {
+                    zombies.erase(zombies.begin() + j);
+
+                    score += 10;
+                    scoreText.setString("Score: " + std::to_string(score));
+                }
                 i--; //as the item in the vector will slide to left ,we move backward 
 
                 break; // no more searching using the same bullet to others zombies
@@ -323,7 +357,7 @@ void Game::update(float deltaTime) {
     //player damage
 
     for (auto& d : zombies) {
-        sf::Vector2f zombiePos = d.zombieSprite.getPosition();
+        sf::Vector2f zombiePos = d->getSprite().getPosition();
         sf::Vector2f playerPos = playerSprite.getPosition();
 
         sf::Vector2f direction = playerPos - zombiePos;//?
@@ -383,7 +417,7 @@ void Game::render() {
         }
 
         for (auto& z : zombies) {
-            window.draw(z.zombieSprite);
+            window.draw(z->getSprite());
         }
 
         
@@ -540,10 +574,20 @@ void Game::shoot() {
 
 
 void Game::spawnZombie() {
-    Zombie z(zombTexture);
+    
 
-    //z.zombieSprite.setScale({ 0.5f,0.5f });
-    z.speed = 10.f;
+    std::shared_ptr<Zombie>zombie;
+
+    int typeSpawn = rand() % 2;///two possible zombie
+
+    if (typeSpawn == 0) {
+        //NormalZombie zombie(zombTexture);
+        zombie= std::make_shared<NormalZombie>(zombTexture);
+    }
+    else if (typeSpawn == 1) {
+        //FastZombie zombie();
+        zombie= std::make_shared<FastZombie>(fastZombieTexture);
+    }
 
     //creating random position of zombies
     // using edge , then we determine the position
@@ -570,9 +614,9 @@ void Game::spawnZombie() {
 
 
 
-    z.zombieSprite.setPosition(pos);
+    zombie->getSprite().setPosition(pos);
 
-    zombies.push_back(z);
+    zombies.push_back(zombie);
 }
 
 void Game::reset() {
