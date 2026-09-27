@@ -5,7 +5,7 @@
 #include <iostream>
 
 //constructor
-Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTexture),gunSprite(gunTexture), playerSprite(playerTexture),introText(gameFont),gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer) {
+Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTexture),gunSprite(gunTexture), playerSprite(playerTexture),introText(gameFont),gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer),eatSound(eatBuffer),auraSound(auraBuffer), dream(dreamBuffer), jojo(jojoBuffer), dictator(dictatorBuffer), fah(fahBuffer), aimCursor(sf::Cursor::createFromSystem(sf::Cursor::Type::Cross).value()) {
     if (!mapTexture.loadFromFile("GrassCenter.png")) {
         std::cout << "failed to load the image";
     }
@@ -38,6 +38,30 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
         std::cout << "failed to load sound ";
     }
 
+    if (!eatBuffer.loadFromFile("nomnomnom_rdOBNcn.wav")) {
+        std::cout << "failed to load sound ";
+    }
+
+    if (!auraBuffer.loadFromFile("tiki-tiki-boosted.wav")) {
+        std::cout << "failed to load sound ";
+    }
+
+    if (!dreamBuffer.loadFromFile("dreamrunning_trim-1.wav")) {
+        std::cout << "failed to load sound ";
+    }
+
+    if (!dictatorBuffer.loadFromFile("mbappe-dictador_bAAKC8q.wav")) {
+        std::cout << "failed to load sound ";
+    }
+
+    if (!jojoBuffer.loadFromFile("jojos-golden-wind_kL2WElB.wav")) {
+        std::cout << "failed to load sound ";
+    }
+
+    if (!fahBuffer.loadFromFile("ive-got-this-fahh-loud-asfr.wav")) {
+        std::cout << "failed to load sound ";
+    }
+
     if (!introSoundTrack.openFromFile("02. Crazy Dave (Intro Theme).ogg")) {
         std::cout << "failed to load sound ";
     }
@@ -46,11 +70,16 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
         std::cout << "failed to load sound ";
     }
 
+    if (!imgCursor.loadFromFile("focus.png")) {
+        std::cout << "failed to load cursor img";
+    }
+
     if (!gameOverSound.openFromFile("game-over-from-plants-vs-zombies-made-with-Voicemod.ogg")) {
         std::cout << "failed to load sound ";
     }
+    
 
-
+    
 
 
     srand(static_cast<unsigned>(time(0))); // to make random number spread more evenly
@@ -116,6 +145,7 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
 
     //sound
     gunSound.setDopplerFactor(25.f);
+    fah.setVolume(50.f);
 
     //SoundTrack
     introSoundTrack.setLooping(true);
@@ -139,6 +169,10 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
 
     uiCam.setSize({ 800.f,600.f });
     uiCam.setCenter({ 400.f,300.f });
+
+    //CURSOR
+    
+    window.setMouseCursor(aimCursor);
 
     //GAMESTATE
 
@@ -201,7 +235,7 @@ void Game::processEvent() {
                 const auto* keyEvent = event->getIf<sf::Event::KeyPressed>();
 
                 if (keyEvent->code == sf::Keyboard::Key::Enter) {
-                    
+                    fah.play();
                     changeState(GAMESTATE::playing);
                 }
             }
@@ -326,6 +360,10 @@ void Game::update(float deltaTime) {
                     zombies.erase(zombies.begin() + j);
 
                     score += 10;
+                    if (score == 1000)auraSound.play();
+                    if (score == 750)dictator.play();
+                    if (score == 500)jojo.play();
+                    if (score == 250)dream.play();
                     scoreText.setString("Score: " + std::to_string(score));
                 }
                 i--; //as the item in the vector will slide to left ,we move backward 
@@ -369,8 +407,10 @@ void Game::update(float deltaTime) {
         float collisionRange = 20.f + 20.f;
 
         if (distance < collisionRange) {
+
             //collision with player occur , and damage given 1 at a time
             if (DamageClock.getElapsedTime().asSeconds() > 1.f) {
+                eatSound.play();
                 playerHealth -= 10;
                 DamageClock.restart();
                 

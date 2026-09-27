@@ -118,7 +118,20 @@ private:
 
 	//Audio Soundbuffer->Sound sound
 	sf::SoundBuffer buffer;
+	sf::SoundBuffer eatBuffer;
+	sf::SoundBuffer auraBuffer;
+	sf::SoundBuffer dreamBuffer;
+	sf::SoundBuffer dictatorBuffer;
+	sf::SoundBuffer jojoBuffer;
+	sf::SoundBuffer fahBuffer;
 	sf::Sound gunSound;
+	sf::Sound eatSound;
+	sf::Sound auraSound;
+	sf::Sound dream;
+	sf::Sound dictator;
+	sf::Sound jojo;
+	sf::Sound fah;
+
 
 	//Music soundTrack
 	sf::Music introSoundTrack;
@@ -141,6 +154,10 @@ private:
 	//Camera view
 	sf::View playerCam;
 	sf::View uiCam;
+
+	//Cursor
+	sf::Image imgCursor;
+	sf::Cursor aimCursor;
 
 	//GAMESTATE
 	GAMESTATE currentState;
