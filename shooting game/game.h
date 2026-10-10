@@ -63,6 +63,10 @@ struct Bullet {
 	Bullet(sf::Texture& tex) :bulletSprite(tex) {}
 };
 
+struct HealthBoost {
+	sf::CircleShape healthBoost;
+	
+};
 
 
 class Game{
@@ -93,6 +97,9 @@ private:
 	std::vector<std::shared_ptr<Zombie>>zombies;
 	sf::Clock spawnClock; // use to give time for zombie to spawn
 
+	std::vector<HealthBoost>health;
+	sf::Clock healthClock;
+
 	//deal with player damage
 	int playerHealth;
 	sf::Clock DamageClock;// use to give a damage at a time
@@ -118,7 +125,23 @@ private:
 
 	//Audio Soundbuffer->Sound sound
 	sf::SoundBuffer buffer;
+	sf::SoundBuffer eatBuffer;
+	sf::SoundBuffer auraBuffer;
+	sf::SoundBuffer dreamBuffer;
+	sf::SoundBuffer dictatorBuffer;
+	sf::SoundBuffer jojoBuffer;
+	sf::SoundBuffer fahBuffer;
+	sf::SoundBuffer fartBuffer;
+	sf::SoundBuffer laPeaceBuffer;
 	sf::Sound gunSound;
+	sf::Sound eatSound;
+	sf::Sound auraSound;
+	sf::Sound dream;
+	sf::Sound dictator;
+	sf::Sound jojo;
+	sf::Sound fah;
+	sf::Sound fart;
+	sf::Sound laPeace;
 
 	//Music soundTrack
 	sf::Music introSoundTrack;
@@ -142,6 +165,10 @@ private:
 	sf::View playerCam;
 	sf::View uiCam;
 
+	//Cursor
+	sf::Image imgCursor;
+	sf::Cursor aimCursor;
+
 	//GAMESTATE
 	GAMESTATE currentState;
 
@@ -157,6 +184,7 @@ private:
 	void shoot();
 
 	void spawnZombie();
+	void spawnHealth();
 	void reset();//reset game
 	void drawMap();
 	bool isWallat(sf::Vector2f pos);
