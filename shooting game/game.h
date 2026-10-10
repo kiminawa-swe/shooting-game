@@ -63,6 +63,10 @@ struct Bullet {
 	Bullet(sf::Texture& tex) :bulletSprite(tex) {}
 };
 
+struct HealthBoost {
+	sf::CircleShape healthBoost;
+	
+};
 
 
 class Game{
@@ -92,6 +96,9 @@ private:
 
 	std::vector<std::shared_ptr<Zombie>>zombies;
 	sf::Clock spawnClock; // use to give time for zombie to spawn
+
+	std::vector<HealthBoost>health;
+	sf::Clock healthClock;
 
 	//deal with player damage
 	int playerHealth;
@@ -124,6 +131,8 @@ private:
 	sf::SoundBuffer dictatorBuffer;
 	sf::SoundBuffer jojoBuffer;
 	sf::SoundBuffer fahBuffer;
+	sf::SoundBuffer fartBuffer;
+	sf::SoundBuffer laPeaceBuffer;
 	sf::Sound gunSound;
 	sf::Sound eatSound;
 	sf::Sound auraSound;
@@ -131,7 +140,8 @@ private:
 	sf::Sound dictator;
 	sf::Sound jojo;
 	sf::Sound fah;
-
+	sf::Sound fart;
+	sf::Sound laPeace;
 
 	//Music soundTrack
 	sf::Music introSoundTrack;
@@ -174,6 +184,7 @@ private:
 	void shoot();
 
 	void spawnZombie();
+	void spawnHealth();
 	void reset();//reset game
 	void drawMap();
 	bool isWallat(sf::Vector2f pos);

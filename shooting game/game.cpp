@@ -5,7 +5,7 @@
 #include <iostream>
 
 //constructor
-Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTexture),gunSprite(gunTexture), playerSprite(playerTexture),introText(gameFont),gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer),eatSound(eatBuffer),auraSound(auraBuffer), dream(dreamBuffer), jojo(jojoBuffer), dictator(dictatorBuffer), fah(fahBuffer), aimCursor(sf::Cursor::createFromSystem(sf::Cursor::Type::Cross).value()) {
+Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTexture),gunSprite(gunTexture), playerSprite(playerTexture),introText(gameFont),gameText(gameFont), scoreText(gameFont), healthText(gameFont), gunSound(buffer),eatSound(eatBuffer),auraSound(auraBuffer), dream(dreamBuffer), jojo(jojoBuffer), dictator(dictatorBuffer), fah(fahBuffer),fart(fartBuffer),laPeace(laPeaceBuffer), aimCursor(sf::Cursor::createFromSystem(sf::Cursor::Type::Cross).value()) {
     if (!mapTexture.loadFromFile("GrassCenter.png")) {
         std::cout << "failed to load the image";
     }
@@ -59,6 +59,14 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
     }
 
     if (!fahBuffer.loadFromFile("ive-got-this-fahh-loud-asfr.wav")) {
+        std::cout << "failed to load sound ";
+    }
+
+    if (!fartBuffer.loadFromFile("fart-meme-sound.wav")) {
+        std::cout << "failed to load sound ";
+    }
+
+    if (!laPeaceBuffer.loadFromFile("laPeace.wav")) {
         std::cout << "failed to load sound ";
     }
 
@@ -145,7 +153,8 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
 
     //sound
     gunSound.setDopplerFactor(25.f);
-    fah.setVolume(50.f);
+    fah.setVolume(15.f);
+    fart.setVolume(100.f);
 
     //SoundTrack
     introSoundTrack.setLooping(true);
@@ -296,6 +305,11 @@ void Game::update(float deltaTime) {
         spawnClock.restart();
     }
 
+    if (healthClock.getElapsedTime().asSeconds() > 10.f) {
+        spawnHealth();
+        healthClock.restart();
+    }
+
     
 
     for (auto& z : zombies) {
@@ -417,6 +431,7 @@ void Game::update(float deltaTime) {
                 healthText.setString("Health: " + std::to_string(playerHealth));
 
                 if (playerHealth <= 0) {
+                    if (score < 150)fart.play();
                     changeState(GAMESTATE::gameover);
                 }
                 
@@ -428,14 +443,50 @@ void Game::update(float deltaTime) {
        
 
     }
+    //player health boost
+        for(int i=0;i<health.size();i++){
+
+        sf::Vector2f healthPos = health[i].healthBoost.getPosition();
+        sf::Vector2f playerPos = playerSprite.getPosition();
+
+        sf::Vector2f direction = playerPos - healthPos;//?
+        float dx = playerPos.x - healthPos.x;
+        float dy = playerPos.y - healthPos.y;
+
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        float collisionRange = 20.f + 20.f;
+
+        if (distance < collisionRange) {
+
+            //collision with player occur , and health given 1 at a time
+            if (playerHealth < 100.f) {
+
+                    laPeace.play();
+                
+                    playerHealth += 10;
+                    
+                    health.erase(health.begin() + i);
+                
+
+            }
+            healthText.setString("Health: " + std::to_string(playerHealth));
+            //health.erase(std::remove_if(health.begin(), health.end(), true), health.end());
+           
+
+        }
+    }
 
     //update camera movement
     sf::Vector2f playerPos = playerSprite.getPosition();
-    float mapWidth = 100 * 32.f;
-    float mapHeight = 75 * 32.f;
+    //float mapWidth = 100 * 32.f;
+    float mapWidth = 800.f * 4;
+
+    //float mapHeight = 75 * 32.f;
+    float mapHeight = 600 * 4;
     //clamp will make the cam center between min and max
-    float camX = std::clamp(playerPos.x, 400.f, mapWidth - 400.f); //clamp(value,minValue,maxValue)
-    float camY = std::clamp(playerPos.y, 300.f, mapHeight - 300.f);
+    float camX = std::clamp(playerPos.x, 800.f*4, mapWidth - 800.f*4); //clamp(value,minValue,maxValue)
+    float camY = std::clamp(playerPos.y, 600.f*4, mapHeight - 600.f*4);
     playerCam.setCenter({ camX,camY });
     
     
@@ -460,6 +511,9 @@ void Game::render() {
             window.draw(z->getSprite());
         }
 
+        for (auto& h : health) {
+            window.draw(h.healthBoost);
+        }
         
         window.draw(playerSprite);
         window.draw(gunSprite);
@@ -614,7 +668,10 @@ void Game::shoot() {
 
 
 void Game::spawnZombie() {
-    
+    /*HealthBoost b;
+    b.healthBoost.setRadius(25.f);
+    b.healthBoost.setFillColor(sf::Color::White);*/
+    //health.push_back(b);
 
     std::shared_ptr<Zombie>zombie;
 
@@ -639,24 +696,55 @@ void Game::spawnZombie() {
     //top bottom left right
 
     if (edge == 0) {
-        pos = { (float)(rand() % 800),0.f }; //top
+        pos = { (float)(rand() % 800*4),0.f }; //top
     }
     else if (edge == 1) {
-        pos = { 800.f,(float)(rand() % 600) };//right
+        pos = { 800.f*4,(float)(rand() % 600*4) };//right
     }
     else if (edge == 2) { 
-        pos ={ (float)(rand() % 800), 600.f }; //bottom
+        pos ={ (float)(rand() % 800*4), 600.f*4 }; //bottom
 
     }
     else if(edge==3) {
-        pos = {0.f,(float)(rand()%600)}; //left
+        pos = {0.f,(float)(rand()%600*4)}; //left
     }
 
 
 
     zombie->getSprite().setPosition(pos);
 
+    /*b.healthBoost.setPosition(pos);
+    health.push_back(b);*/
     zombies.push_back(zombie);
+}
+
+void Game::spawnHealth() {
+    HealthBoost b;
+    b.healthBoost.setRadius(25.f);
+    b.healthBoost.setFillColor(sf::Color::White);
+
+    sf::Vector2f Healthpos;
+    int edge = rand() % 4;
+
+     if (edge == 0) {
+        Healthpos = { (float)(rand() % 800*4),0.f }; //top
+    }
+    else if (edge == 1) {
+        Healthpos = { 800.f*4,(float)(rand() % 600*3) };//right
+    }
+    else if (edge == 2) {
+        Healthpos = { (float)(rand() % 800*3), 600.f*4 }; //bottom
+
+    }
+    else if (edge == 3) {
+        Healthpos = { 0.f,(float)(rand() % 600*3) }; //left
+    }
+
+     b.healthBoost.setPosition(Healthpos);
+     health.push_back(b);
+
+
+
 }
 
 void Game::reset() {
