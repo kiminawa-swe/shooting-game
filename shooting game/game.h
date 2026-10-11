@@ -64,7 +64,11 @@ struct Bullet {
 };
 
 struct HealthBoost {
-	sf::CircleShape healthBoost;
+	//sf::CircleShape healthBoost;
+
+	sf::Sprite healingSprite;
+
+	HealthBoost(sf::Texture& tex) :healingSprite(tex){}
 	
 };
 
@@ -84,6 +88,8 @@ private:
 	sf::Texture fastZombieTexture;
 
 	sf::Texture bulletTexture;
+
+	sf::Texture healthTexture;
 
 	sf::Texture gunTexture;
 	sf::Sprite gunSprite;
