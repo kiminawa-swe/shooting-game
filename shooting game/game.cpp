@@ -30,6 +30,10 @@ Game::Game() :window(sf::VideoMode({ 800, 600 }), "my game"), mapSprite(mapTextu
         std::cout << "failed to load the image";
     }
 
+    if (!healthTexture.loadFromFile("Healing_Potion.png")) {
+        std::cout << "failed to load the image";
+    }
+
     if (!gameFont.openFromFile("orange juice 2.0.ttf")) {
         std::cout << "failed to load font";
     }
@@ -446,7 +450,7 @@ void Game::update(float deltaTime) {
     //player health boost
         for(int i=0;i<health.size();i++){
 
-        sf::Vector2f healthPos = health[i].healthBoost.getPosition();
+        sf::Vector2f healthPos = health[i].healingSprite.getPosition();
         sf::Vector2f playerPos = playerSprite.getPosition();
 
         sf::Vector2f direction = playerPos - healthPos;//?
@@ -479,14 +483,11 @@ void Game::update(float deltaTime) {
 
     //update camera movement
     sf::Vector2f playerPos = playerSprite.getPosition();
-    //float mapWidth = 100 * 32.f;
-    float mapWidth = 800.f * 4;
-
-    //float mapHeight = 75 * 32.f;
-    float mapHeight = 600 * 4;
+    float mapWidth = 100 * 32.f;
+    float mapHeight = 75 * 32.f;
     //clamp will make the cam center between min and max
-    float camX = std::clamp(playerPos.x, 800.f*4, mapWidth - 800.f*4); //clamp(value,minValue,maxValue)
-    float camY = std::clamp(playerPos.y, 600.f*4, mapHeight - 600.f*4);
+    float camX = std::clamp(playerPos.x, 400.f, mapWidth - 400.f); //clamp(value,minValue,maxValue)
+    float camY = std::clamp(playerPos.y, 300.f, mapHeight - 300.f);
     playerCam.setCenter({ camX,camY });
     
     
@@ -512,7 +513,7 @@ void Game::render() {
         }
 
         for (auto& h : health) {
-            window.draw(h.healthBoost);
+            window.draw(h.healingSprite);
         }
         
         window.draw(playerSprite);
@@ -719,9 +720,9 @@ void Game::spawnZombie() {
 }
 
 void Game::spawnHealth() {
-    HealthBoost b;
-    b.healthBoost.setRadius(25.f);
-    b.healthBoost.setFillColor(sf::Color::White);
+    HealthBoost b(healthTexture);
+    /*b.healthBoost.setRadius(25.f);
+    b.healthBoost.setFillColor(sf::Color::White);*/
 
     sf::Vector2f Healthpos;
     int edge = rand() % 4;
@@ -740,7 +741,7 @@ void Game::spawnHealth() {
         Healthpos = { 0.f,(float)(rand() % 600*3) }; //left
     }
 
-     b.healthBoost.setPosition(Healthpos);
+     b.healingSprite.setPosition(Healthpos);
      health.push_back(b);
 
 
